@@ -92,6 +92,8 @@ function uql_checker_email($value)
 
 // <!-- Checker APIs END   -->
 
+$UNDERQL['error']['prefix']   = 'UnderQL Error : ';
+$UNDERQL['warning']['prefix'] = 'UnderQL Warning : ';
 
 class underQL{
 
@@ -106,6 +108,10 @@ private $table_name; // table name that is accepting all instructions from the o
 private $db_handle;
 private $db_query_result;
 private $db_current_object;
+
+// Errors
+
+private $err_message;
 
 /* Initialization */
 public function __construct()
@@ -138,13 +144,46 @@ public function __construct()
 private function clearDataBuffer()
 {
   $this->data_buffer = array();
+  $this->err_message = '';
+}
+
+private function error($msg)
+{
+  global $UNDERQL;
+  die($UNDERQL['error']['prefix'].$msg);
 }
 
 public function table($tname)
 {
   global $UNDERQL;
-  $this->table_name = $tname;
-  $this->string_fields = $UNDERQL['table'][$tname];
+
+  if(!array_key_exists($tname,$UNDERQL['table']))
+    {
+      $l_result = @mysql_query('SHOW TABLES FROM `'.$UNDERQL['db']['name'].'`');
+      $l_count  = @mysql_num_rows($l_result);
+      if($l_count == 0)
+        $this->error($tname.' dose not exist. '.mysql_error());
+
+      while($l_t = @mysql_fetch_row($l_result))
+      {
+
+          if(strcmp($tname,$l_t[0]) == 0)
+           {
+             $this->table_name = $tname;
+             $this->string_fields = $UNDERQL['table'][$tname] = array();
+             return;
+           }
+      }
+    }
+    else
+    {
+     $this->string_fields = $UNDERQL['table'][$tname];
+     $this->table_name = $tname;
+      return;
+    }
+
+    $this->error($tname.' dose not exist');
+
 }
 
 public function __invoke($tname,$cols='*',$where=null)
