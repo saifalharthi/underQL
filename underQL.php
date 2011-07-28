@@ -9,6 +9,7 @@
    domain registered 6:32 am <www.underql.com>
    1.0.0.Beta
 
+   License : MPL(Mozilla Public License 1.1)
    */
 
 /* database host */
