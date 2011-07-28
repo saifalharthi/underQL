@@ -190,7 +190,6 @@ public function table($tname)
 public function __invoke($tname,$cols='*',$extra=null)
 {
   $this->table($tname);
-
   return $this->select($cols,$extra);
 }
 
@@ -339,7 +338,7 @@ private function formatSelectCommand($cols = '*',$extra = null)
 public function select($cols = '*',$extra=null)
 {
    $sql_select_string = $this->formatSelectCommand($cols,$extra);
-   
+
    $this->free();
 
    $l_result = $this->query($sql_select_string);
@@ -348,7 +347,7 @@ public function select($cols = '*',$extra=null)
   if(@mysql_num_rows($this->db_query_result) == 0)
      return false;
 
-     $this->fetch(); // get first record
+   $this->fetch(); // get first record
    return $l_result;
 }
 
