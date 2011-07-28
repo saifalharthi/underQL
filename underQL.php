@@ -150,7 +150,7 @@ private function clearDataBuffer()
 private function error($msg)
 {
   global $UNDERQL;
-  die($UNDERQL['error']['prefix'].$msg);
+  die('<code><b><font color ="#FF0000">'.$UNDERQL['error']['prefix'].'</font></b></code><code>'.$msg.'</code>');
 }
 
 public function table($tname)
@@ -186,24 +186,24 @@ public function table($tname)
 
 }
 
-public function __invoke($tname,$cols='*',$where=null)
+public function __invoke($tname,$cols='*',$extra=null)
 {
   $this->table($tname);
 
-  return $this->select($cols,$where);
+  return $this->select($cols,$extra);
 }
 
 
 public function __set($key,$val)
 {
- /* if(in_array($key,$this->string_fields))
-   $this->data_buffer[$key] = "'".$val."'";
-  else   */
    $this->data_buffer[$key] = $val;
 }
 
-private function qoute()
+private function quote()
 {
+  if(@count($this->data_buffer) == 0)
+   return;
+
   foreach($this->data_buffer as $key=>$val)
   {
    if(in_array($key,$this->string_fields))
@@ -324,20 +324,20 @@ public function delete($where = null)
   return $l_result;
 }
 
-private function formatSelectCommand($cols = '*',$where = null)
+private function formatSelectCommand($cols = '*',$extra = null)
 {
   $sql = 'SELECT '.$cols.' FROM '.$this->table_name;
 
-  if($where != null)
-   $sql .= ' WHERE '.$where;
+  if($extra != null)
+   $sql .= ' '.$extra;
 
   return $sql;
 
 }
 
-private function select($cols = '*',$where=null)
+private function select($cols = '*',$extra=null)
 {
-  $sql_select_string = $this->formatSelectCommand($cols,$where);
+  $sql_select_string = $this->formatSelectCommand($cols,$extra);
 
    $l_result = $this->query($sql_select_string);
    $this->clearDataBuffer();
