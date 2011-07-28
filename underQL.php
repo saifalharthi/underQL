@@ -133,6 +133,11 @@ public function __construct()
 
 }
 
+public function __destruct()
+{
+   $this->finish();
+}
+
 private function clearDataBuffer()
 {
   $this->data_buffer = array();
@@ -331,9 +336,11 @@ private function formatSelectCommand($cols = '*',$extra = null)
 
 }
 
-private function select($cols = '*',$extra=null)
+public function select($cols = '*',$extra=null)
 {
-  $sql_select_string = $this->formatSelectCommand($cols,$extra);
+   $sql_select_string = $this->formatSelectCommand($cols,$extra);
+   
+   $this->free();
 
    $l_result = $this->query($sql_select_string);
    $this->clearDataBuffer();
@@ -459,6 +466,12 @@ public function readFields()
 
 }
 
+ public function finish()
+ {
+   $this->free();
+   if($this->db_handle)
+    @mysql_close($this->db_handle);
+ }
 }
 
  /* underQL instance (object) */
