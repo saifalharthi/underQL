@@ -405,8 +405,14 @@ public function query($query)
 {
     $this->free();
     $this->db_query_result = @mysql_query($query);
+
     if($this->db_query_result)
+    {
+      if(@mysql_num_rows($this->db_query_result) > 0)
+        $this->fetch();
+        
       return true;
+    }
 
    return false;
 }
