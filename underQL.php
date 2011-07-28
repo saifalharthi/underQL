@@ -23,20 +23,10 @@ $UNDERQL['db']['password'] = '';
 /* database encoding system for database operations */
 $UNDERQL['db']['encoding'] = 'utf8';
 
-/*
-  Here you should put all tables names that you inted to work with
-    like the following :
 
-  $UNDERQL['table']['your_table_name'] = array('field1','field2',...);
-
-  Each table has its own array. However, the array values are the names of
-   the STRING FIELDS that are accepting single qoutes in that table.
-
-   Note : Don't put any numerical field name in array.
-*/
-$UNDERQL['table']['adeeb_user'] = array('name','email','password','description','status','meta','date','time');
-$UNDERQL['table']['underql'] = array('title','description');
-
+/* store some information about every table that you work with for
+ some internal purposes. */
+$UNDERQL['table'] = array();
 
 /*
 
@@ -100,6 +90,7 @@ class underQL{
 //used by insert instruction
 private $data_buffer; // used to stor key/value that entered by user
 private $string_fields; // contains the name of all string fields to use it to add single qoute to the value.
+private $table_fields_names;
 private $table_name; // table name that is accepting all instructions from the object
 
 
@@ -136,6 +127,7 @@ public function __construct()
    $this->db_current_object = null;
    $this->db_query_result   = false;
 
+   $this->table_fields_names = array();
 
    $this->clearDataBuffer();
 
@@ -166,22 +158,26 @@ public function table($tname)
 
       while($l_t = @mysql_fetch_row($l_result))
       {
-
           if(strcmp($tname,$l_t[0]) == 0)
            {
              $this->table_name = $tname;
-             $this->string_fields = $UNDERQL['table'][$tname] = array();
+            // $this->string_fields = $UNDERQL['table'][$tname] = array();
+             @mysql_free_result($l_result);
+             $this->readFields();
              return;
            }
       }
     }
     else
     {
-     $this->string_fields = $UNDERQL['table'][$tname];
+     //$this->string_fields = $UNDERQL['table'][$tname];
      $this->table_name = $tname;
+     $this->readFields();
+     @mysql_free_result($l_result);
       return;
     }
 
+    @mysql_free_result($l_result);
     $this->error($tname.' dose not exist');
 
 }
@@ -223,7 +219,7 @@ private function formatInsertCommand()
 
   $sql_columns = '(';
   $sql_values  = ' VALUE(';
-  $this->qoute();
+  $this->quote();
   $i = 0;
   foreach($this->data_buffer as $k=>$v)
   {
@@ -410,7 +406,7 @@ public function query($query)
     {
       if(@mysql_num_rows($this->db_query_result) > 0)
         $this->fetch();
-        
+
       return true;
     }
 
@@ -423,6 +419,38 @@ public function __get($key)
     return $this->db_current_object->$key;
 
    return '';
+}
+
+public function readFields()
+{
+
+  global $UNDERQL;
+
+
+  if(isset($UNDERQL['table'][$this->table_name]))
+   return;
+
+  $l_fs = @mysql_list_fields($UNDERQL['db']['name'],$this->table_name);
+  $l_fq = @mysql_query('SHOW COLUMNS FROM `'.$this->table_name.'`');
+  $l_fc = @mysql_num_rows($l_fq);
+  @mysql_free_result($l_fq);
+  $i = 0;
+  $this->table_fields_names = array();
+  $this->string_fields = array();
+
+  while($i < $l_fc)
+  {
+     $l_f = mysql_fetch_field($l_fs);
+
+     if($l_f->numeric != 1)
+     {
+         $this->string_fields[@count($this->string_fields)] = $l_f->name;
+        $this->table_fields_names [@count($this->table_fields_names)] = $l_f->name;
+     }
+
+     $i++;
+  }
+
 }
 
 }
