@@ -355,8 +355,14 @@ public function count()
 {
   if(!$this->db_query_result)
    return 0;
-
   return @mysql_num_rows($this->db_query_result);
+}
+
+public function affected()
+{
+  if((!$this->db_handle))
+   return 0;
+  return @mysql_affected_rows($this->db_handle);
 }
 
 public function free()
