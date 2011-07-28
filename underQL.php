@@ -15,7 +15,7 @@
 /* database host */
 $UNDERQL['db']['host']     = 'localhost';
 /* database name */
-$UNDERQL['db']['name']     = 'adeeb';
+$UNDERQL['db']['name']     = 'underQL';
 /* database user name */
 $UNDERQL['db']['user']     = 'root';
 /* database password */
@@ -264,7 +264,7 @@ private function formatUpdateCommand($where = null)
 
   $sql_clues = '';
 
-  $this->qoute();
+  $this->quote();
 
   $i = 0;
   foreach($this->data_buffer as $k=>$v)
