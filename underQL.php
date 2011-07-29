@@ -64,11 +64,6 @@ function uql_filter_xss( $value )
 }
 
 
-function uql_filter_trim( $value )
-{
-      return trim( $value );
-}
-
 // <!-- Filter APIs END   -->
 // <!-- Checker APIs Begin -->
 
@@ -91,7 +86,8 @@ $UNDERQL['rule']['uql_prefix'] = 'uql_rule_';
 
 $UNDERQL['rule']['uql_fail_messages'] = array(
 
-    'length' => 'Length of %s was exceeded the maximum length (%d)'
+    'length' => 'Length of %s was exceeded the maximum length (%d)',
+    'required' => '%s value is required'
 
 );
 
@@ -102,9 +98,18 @@ define ('UQL_RULE_NOP',0xE3);
 define ('UQL_RULE_OK',0xE4);
 define ('UQL_RULE_FAIL',0xE5); // when rule fail of all rules
 
-function uql_rule_length($rules, $name, $value)
+function uql_uti_get_rule_error_message($key)
 {
    global $UNDERQL;
+   $l_list = $UNDERQL['rule']['uql_fail_messages'];
+   if(isset($l_list[$key]))
+    return $l_list[$key];
+
+   return '';
+}
+
+function uql_rule_length($rules, $name, $value)
+{
 
    if(is_array($rules))
    {
@@ -113,12 +118,35 @@ function uql_rule_length($rules, $name, $value)
 
      $v = (int) $rules[$name]['length'];
 
-     $error_messages = $UNDERQL['rule']['uql_fail_messages'];
-     $length_error_message = sprintf($error_messages['length'],$name,$v);
+     $error_message = sprintf(uql_uti_get_rule_error_message('length'),$name,$v);
 
      //$v += 2; //escape string single quotes
      if($v < strlen($value))
-      return $length_error_message;
+      return $error_message;
+     else
+      return UQL_RULE_MATCHED;
+   }
+
+   return UQL_RULE_NOP;
+}
+//////////////////////////////////////////////
+
+function uql_rule_required($rules,$name,$value)
+{
+  global $UNDERQL;
+
+   if(is_array($rules))
+   {
+     if((!isset($rules[$name])) || (!isset($rules[$name]['length'])))
+      return UQL_RULE_NOP;
+
+     $v = trim($value);
+
+     $error_message = sprintf(uql_uti_get_rule_error_message('required'),$name,$v);
+
+
+     if(strlen($v) == 0)
+      return $error_message;
      else
       return UQL_RULE_MATCHED;
    }
@@ -126,6 +154,7 @@ function uql_rule_length($rules, $name, $value)
    return UQL_RULE_NOP;
 }
 
+////////////////////////////////////////////////////
 
 class UQLRule
 {
