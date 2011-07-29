@@ -133,20 +133,18 @@ function uql_rule_length($rules, $name, $value)
 
 function uql_rule_required($rules,$name,$value)
 {
-  global $UNDERQL;
 
    if(is_array($rules))
    {
-     if((!isset($rules[$name])) || (!isset($rules[$name]['length'])))
+     if((!isset($rules[$name])) || (!isset($rules[$name]['required'])))
       return UQL_RULE_NOP;
 
      $v = trim($value);
 
      $error_message = sprintf(uql_uti_get_rule_error_message('required'),$name,$v);
 
-
      if(strlen($v) == 0)
-      return $error_message;
+     return $error_message;
      else
       return UQL_RULE_MATCHED;
    }
@@ -215,20 +213,18 @@ class UQLRule
             $l_args_count = @ count( $args );
             if ( $l_args_count == 0 )
                   return;
-            else
-                  if ( $l_args_count == 1 )
+            else if ( $l_args_count == 1 )
                         $this->addRule( $args[0], $func, true );
                   //args[0] contains the rule name.
-                  else
-                        if ( $l_args_count == 2 )
+            else if ( $l_args_count == 2 )
                               $this->addRule( $args[0], $func, $args[1] );
                         // one value
-                        else
-                        {
+            else
+                     {
                         // array_shift($args);
                               $this->addRule( $args[0], $func, $args );
                               // many values
-            }
+                     }
       }
 
       public function applyRule($rule_name,$name,$value)
@@ -655,7 +651,11 @@ class underQL
       public function __get( $key )
       {
             if ( $this->db_current_object )
-                  return $this->db_current_object->$key;
+              {
+                 if(isset($this->db_current_object->$key))
+                    return $this->db_current_object->$key;
+              }
+
             return '';
       }
 
