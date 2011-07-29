@@ -2,14 +2,15 @@
 <?php
 
 /*
-UnderQL Project
-By Abdullah E. Almehmadi
-<cs.abdullah@hotmail.com>
-6:25 am 26-08-32 : 2011-07-27
-domain registered 6:32 am <www.underql.com>
-1.0.0.Beta
+                UnderQL
+           Abdullah E. Almehmadi
+         <cs.abdullah@hotmail.com>
+        6:25 am 26-08-32 : 2011-07-27
+       MPL(Mozilla Public License 1.1)
+    domain registered 6:32 am <www.underql.com>
+              1.0.0.Beta
 
-License : MPL(Mozilla Public License 1.1)
+
 */
 
 /* database host */
@@ -34,7 +35,7 @@ $UNDERQL['table'] = array( );
 /*
 
 underQL uses filters to do something with data before insert or update theme
-like clean XSS, SQL injection or trim the value. However, you can write your
+like clean XSS or trim the value. However, you can write your
 own filter by writing the function with the following pattern :
 
 function uql_filter_[filtername]($value){
@@ -68,11 +69,6 @@ function uql_filter_trim( $value )
       return trim( $value );
 }
 
-
-function uql_filter_sqli( $value )
-{
-      return mysql_escape_string( $value );
-}
 // <!-- Filter APIs END   -->
 // <!-- Checker APIs Begin -->
 
