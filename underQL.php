@@ -55,11 +55,6 @@ them.
 $UNDERQL['filter']['prefix'] = 'uql_filter_';
 
 
-function uql_filter_jabli( $value )
-{
-      $v = '[' . $value . ']';
-      return $v;
-}
 
 
 function uql_filter_xss( $value )
@@ -96,23 +91,24 @@ $UNDERQL['error']['prefix'] = 'UnderQL Error : ';
 $UNDERQL['warning']['prefix'] = 'UnderQL Warning : ';
 
 
-$UNDERQL['rule']['prefix'] = 'uql_rule_';
+$UNDERQL['rule']['uql_prefix'] = 'uql_rule_';
 
 define ('UQL_RULE_MATCHED',0xE1);
 define ('UQL_RULE_NOT_MATCHED',0xE2);
 define ('UQL_RULE_NOP',0xE3);
+/*This is returned if all rules applied with no problems*/
+define ('UQL_RULE_OK',0xE4);
+define ('UQL_RULE_FAIL',0xE5); // when rule fail of all rules
 
 function uql_rule_length($rules, $name, $value)
 {
    if(is_array($rules))
    {
-     if(!is_int($value))
-      return UQL_RULE_NOT_MATCHED;
-
      if((!isset($rules[$name])) || (!isset($rules[$name]['length'])))
       return UQL_RULE_NOP;
      $v = (int) $rules[$name]['length'];
-     if($v > (int)$value)
+
+     if($v < strlen($value))
       return UQL_RULE_NOT_MATCHED;
      else
       return UQL_RULE_MATCHED;
@@ -197,10 +193,10 @@ class UQLRule
       public function applyRule($rule_name,$name,$value)
       {
         global $UNDERQL;
-        $l_rule_callback = $UNDERQL['rule']['prefix'].$rule_name;
+        $l_rule_callback = $UNDERQL['rule']['uql_prefix'].$rule_name;
         if(!function_exists($l_rule_callback))
          return UQL_RULE_NOP;
-
+//         echo $l_rule_callback;
          return $l_rule_callback($this->rules,$name,$value);
 
       }
@@ -222,6 +218,8 @@ class underQL
       private $db_handle;
       private $db_query_result;
       private $db_current_object;
+
+      private $rules_objects_list;
       // Errors
       private $err_message;
 
@@ -243,6 +241,7 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
+            $this->rules_objects_list = array();
             $this->clearDataBuffer( );
       }
 
@@ -313,6 +312,59 @@ class underQL
             $this->data_buffer[$key] = $val;
       }
 
+      public function attachRule($rule_object)
+      {
+          if(!($rule_object instanceof UQLRule))
+           return false;
+
+          $this->rules_objects_list[$rule_object->getTableName()] = $rule_object;
+          return true;
+      }
+
+      public function detachRule($tname)
+      {
+        if(isset($this->rules_objects_list[$tname]))
+         $this->rules_objects_list[$tname] = null;
+      }
+
+      private function executeRules()
+      {
+
+           if(@count($this->data_buffer) == 0) // no fields
+             return UQL_RULE_OK;
+
+           $l_rules_object_count = @count($this->rules_objects_list);
+           if($l_rules_object_count == 0)
+            return UQL_RULE_OK;
+
+           if(!isset($this->rules_objects_list[$this->table_name]))
+             return UQL_RULE_OK;
+
+           $l_target_rule = $this->rules_objects_list[$this->table_name];
+
+           $l_rules = $l_target_rule->getRules();
+           if(@count($l_rules) == 0)
+            return UQL_RULE_OK;
+
+           foreach($l_rules as $field=>$rules_list)
+           {
+             if(strcmp($field,'UQL') == 0)
+              continue;
+
+             foreach($rules_list as $rule_name =>$rule_value)
+             {
+               // echo $rule_name.$rule_value.'<br />';
+               if(!isset($this->data_buffer[$field]))
+                continue;
+               // echo $field.' : '.$rule_name.'('.$rule_value.')<br />';
+               if($l_target_rule->applyRule($rule_name,$field,$this->data_buffer[$field])
+                  == UQL_RULE_NOT_MATCHED)
+                return UQL_RULE_FAIL;
+             }
+           }
+
+           return UQL_RULE_OK;
+      }
 
       private function quote( )
       {
@@ -326,6 +378,7 @@ class underQL
                         $this->data_buffer[$key] = $val;
             }
       }
+
 
 
       private function formatInsertCommand( )
@@ -361,6 +414,10 @@ class underQL
             $sql_insert_string = $this->formatInsertCommand( );
             if ( $sql_insert_string == false )
                   return false;
+
+            if($this->executeRules() == UQL_RULE_FAIL)
+              $this->error('Fail');
+
             $l_result = $this->query( $sql_insert_string );
             $this->clearDataBuffer( );
             return $l_result;
@@ -395,6 +452,10 @@ class underQL
             $sql_update_string = $this->formatUpdateCommand( $where );
             if ( $sql_update_string == false )
                   return false;
+
+            if($this->executeRules() == UQL_RULE_FAIL)
+              $this->error('Fail');
+
             $l_result = $this->query( $sql_update_string );
             $this->clearDataBuffer( );
             return $l_result;
