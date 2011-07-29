@@ -446,44 +446,6 @@ class underQL
          $this->rules_objects_list[$tname] = null;
       }
 
-      /*private function executeRules()
-      {
-
-           if(@count($this->data_buffer) == 0) // no fields
-             return UQL_RULE_OK;
-
-           $l_rules_object_count = @count($this->rules_objects_list);
-           if($l_rules_object_count == 0)
-            return UQL_RULE_OK;
-
-           if(!isset($this->rules_objects_list[$this->table_name]))
-             return UQL_RULE_OK;
-
-           $l_target_rule = $this->rules_objects_list[$this->table_name];
-
-           $l_rules = $l_target_rule->getRules();
-           if(@count($l_rules) == 0)
-            return UQL_RULE_OK;
-
-           foreach($l_rules as $field=>$rules_list)
-           {
-             if(strcmp($field,'UQL') == 0)
-              continue;
-
-             foreach($rules_list as $rule_name =>$rule_value)
-             {
-               // echo $rule_name.$rule_value.'<br />';
-               if(!isset($this->data_buffer[$field]))
-                continue;
-               // echo $field.' : '.$rule_name.'('.$rule_value.')<br />';
-               if($l_target_rule->applyRule($rule_name,$field,$this->data_buffer[$field])
-                  == UQL_RULE_NOT_MATCHED)
-                return UQL_RULE_FAIL;
-             }
-           }
-
-           return UQL_RULE_OK;
-      }*/
 
       private function quote( )
       {
