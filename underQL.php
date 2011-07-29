@@ -98,9 +98,27 @@ $UNDERQL['warning']['prefix'] = 'UnderQL Warning : ';
 
 $UNDERQL['rule']['prefix'] = 'uql_rule_';
 
+define ('UQL_RULE_MATCHED',0xE1);
+define ('UQL_RULE_NOT_MATCHED',0xE2);
+define ('UQL_RULE_NOP',0xE3);
 
-function uql_rule_length( $rules, $name, $value, $alias = null )
+function uql_rule_length($rules, $name, $value)
 {
+   if(is_array($rules))
+   {
+     if(!is_int($value))
+      return UQL_RULE_NOT_MATCHED;
+
+     if((!isset($rules[$name])) || (!isset($rules[$name]['length'])))
+      return UQL_RULE_NOP;
+     $v = (int) $rules[$name]['length'];
+     if($v > (int)$value)
+      return UQL_RULE_NOT_MATCHED;
+     else
+      return UQL_RULE_MATCHED;
+   }
+
+   return UQL_RULE_NOT_MATCHED;
 }
 
 
@@ -174,6 +192,17 @@ class UQLRule
                               $this->addRule( $args[0], $func, $args );
                               // many values
             }
+      }
+
+      public function applyRule($rule_name,$name,$value)
+      {
+        global $UNDERQL;
+        $l_rule_callback = $UNDERQL['rule']['prefix'].$rule_name;
+        if(!function_exists($l_rule_callback))
+         return UQL_RULE_NOP;
+
+         return $l_rule_callback($this->rules,$name,$value);
+
       }
 
 
