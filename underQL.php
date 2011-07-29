@@ -108,7 +108,7 @@ function uql_uti_get_rule_error_message($key)
    return '';
 }
 
-function uql_rule_length($rules, $name, $value)
+function uql_rule_length($rules, $name, $value,$alias = null)
 {
 
    if(is_array($rules))
@@ -118,7 +118,12 @@ function uql_rule_length($rules, $name, $value)
 
      $v = (int) $rules[$name]['length'];
 
-     $error_message = sprintf(uql_uti_get_rule_error_message('length'),$name,$v);
+     if($alias != null)
+      $caption = $alias;
+     else
+      $caption = $name;
+
+     $error_message = sprintf(uql_uti_get_rule_error_message('length'),$caption,$v);
 
      //$v += 2; //escape string single quotes
      if($v < strlen($value))
@@ -131,7 +136,7 @@ function uql_rule_length($rules, $name, $value)
 }
 //////////////////////////////////////////////
 
-function uql_rule_required($rules,$name,$value)
+function uql_rule_required($rules,$name,$value,$alias = null)
 {
 
    if(is_array($rules))
@@ -141,7 +146,12 @@ function uql_rule_required($rules,$name,$value)
 
      $v = trim($value);
 
-     $error_message = sprintf(uql_uti_get_rule_error_message('required'),$name,$v);
+     if($alias != null)
+      $caption = $alias;
+     else
+      $caption = $name;
+
+     $error_message = sprintf(uql_uti_get_rule_error_message('required'),$caption,$v);
 
      if(strlen($v) == 0)
      return $error_message;
@@ -234,7 +244,11 @@ class UQLRule
         if(!function_exists($l_rule_callback))
          return UQL_RULE_NOP;
 //         echo $l_rule_callback;
-         $l_result = $l_rule_callback($this->rules,$name,$value);
+         if(isset($this->aliases[$name]))
+            $l_result = $l_rule_callback($this->rules,$name,$value,$this->aliases[$name]);
+         else
+            $l_result = $l_rule_callback($this->rules,$name,$value);
+
          if(is_string($l_result)) // catch error
          {
            $this->rules_error_message = $l_result;
