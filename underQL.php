@@ -285,9 +285,15 @@ class underQL
       /* Initialization */
 
 
-      public function __construct( )
+      public function __construct( $host = null, $user = null, $pass = null, $dbname = null )
       {
             global $UNDERQL;
+
+            $l_host   = ($host   == null) ? $UNDERQL['db']['host']     : $host;
+            $l_user   = ($user   == null) ? $UNDERQL['db']['user']     : $user;
+            $l_pass   = ($pass   == null) ? $UNDERQL['db']['password'] : $pass;
+            $l_dbname = ($dbname == null) ? $UNDERQL['db']['name']     : $dbname;
+
             $this->db_handle = @ mysql_connect( $UNDERQL['db']['host'], $UNDERQL['db']['user'], $UNDERQL['db']['password'] );
             if ( !$this->db_handle )
                   $this->error( 'Unable to connect to DB..!' );
