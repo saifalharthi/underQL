@@ -13,83 +13,13 @@
 
 */
 
-/* database host */
-$UNDERQL['db']['host'] = 'localhost';
+require_once('config.php');
+require_once('langs/'.$UNDERQL['lang']['module'].'.php');
+require_once('uti.php');
+require_once('rule.php');
+require_once('filter.php');
+require_once('checker.php');
 
-/* database name */
-$UNDERQL['db']['name'] = 'underQL';
-
-/* database user name */
-$UNDERQL['db']['user'] = 'root';
-
-/* database password */
-$UNDERQL['db']['password'] = '';
-
-/* database encoding system for database operations */
-$UNDERQL['db']['encoding'] = 'utf8';
-
-/* store some information about every table that you work with for
-some internal purposes. */
-$UNDERQL['table'] = array( );
-
-/*
-
-underQL uses filters to do something with data before insert or update theme
-like clean XSS or trim the value. However, you can write your
-own filter by writing the function with the following pattern :
-
-function uql_filter_[filtername]($value){
-
-return $value_after_apply_filter;
-}
-
-After that you can apply the filter like the following :
-
-$_->filter('filtername','name','title',...);
-
-The parameters that are coming after the filter name are the fields names
-that you intent to apply your filter on their values before insert or update
-them.
-
-*/
-// <!-- Filter APIs Begin -->
-$UNDERQL['filter']['prefix'] = 'uql_filter_';
-
-
-
-
-function uql_filter_xss( $value )
-{
-      return strip_tags( $value );
-}
-
-
-// <!-- Filter APIs END   -->
-// <!-- Checker APIs Begin -->
-
-
-$UNDERQL['checker']['prefix'] = 'uql_checker_';
-
-
-function uql_checker_email( $value )
-{
-      return filter_var( $value, FILTER_VALIDATE_EMAIL );
-}
-// <!-- Checker APIs END   -->
-
-
-$UNDERQL['error']['prefix'] = 'UnderQL Error : ';
-$UNDERQL['warning']['prefix'] = 'UnderQL Warning : ';
-
-
-$UNDERQL['rule']['uql_prefix'] = 'uql_rule_';
-
-$UNDERQL['rule']['uql_fail_messages'] = array(
-
-    'length' => 'Length of %s was exceeded the maximum length (%d)',
-    'required' => '%s value is required'
-
-);
 
 define ('UQL_RULE_MATCHED',0xE1);
 define ('UQL_RULE_NOT_MATCHED',0xE2);
@@ -98,71 +28,7 @@ define ('UQL_RULE_NOP',0xE3);
 define ('UQL_RULE_OK',0xE4);
 define ('UQL_RULE_FAIL',0xE5); // when rule fail of all rules
 
-function uql_uti_get_rule_error_message($key)
-{
-   global $UNDERQL;
-   $l_list = $UNDERQL['rule']['uql_fail_messages'];
-   if(isset($l_list[$key]))
-    return $l_list[$key];
 
-   return '';
-}
-
-function uql_rule_length($rules, $name, $value,$alias = null)
-{
-
-   if(is_array($rules))
-   {
-     if((!isset($rules[$name])) || (!isset($rules[$name]['length'])))
-      return UQL_RULE_NOP;
-
-     $v = (int) $rules[$name]['length'];
-
-     if($alias != null)
-      $caption = $alias;
-     else
-      $caption = $name;
-
-     $error_message = sprintf(uql_uti_get_rule_error_message('length'),$caption,$v);
-
-     //$v += 2; //escape string single quotes
-     if($v < strlen($value))
-      return $error_message;
-     else
-      return UQL_RULE_MATCHED;
-   }
-
-   return UQL_RULE_NOP;
-}
-//////////////////////////////////////////////
-
-function uql_rule_required($rules,$name,$value,$alias = null)
-{
-
-   if(is_array($rules))
-   {
-     if((!isset($rules[$name])) || (!isset($rules[$name]['required'])))
-      return UQL_RULE_NOP;
-
-     $v = trim($value);
-
-     if($alias != null)
-      $caption = $alias;
-     else
-      $caption = $name;
-
-     $error_message = sprintf(uql_uti_get_rule_error_message('required'),$caption,$v);
-
-     if(strlen($v) == 0)
-     return $error_message;
-     else
-      return UQL_RULE_MATCHED;
-   }
-
-   return UQL_RULE_NOP;
-}
-
-////////////////////////////////////////////////////
 
 class UQLRule
 {

@@ -1,0 +1,12 @@
+
+underQL Project
+
+symbols :
+ - = for future
+ @ = in process
+ # = acheived
+ % = deprecated or canceld
+
+------------------------------------------------
+- Add toXML method that helps you to get data as XML based on a query.
+- Add toJSON method that helps you to get data as JSON based on a query.

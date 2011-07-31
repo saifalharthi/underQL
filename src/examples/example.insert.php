@@ -6,9 +6,7 @@
 
   $_->id = 100;
   $_->name = 'www.abdullaheid.net';
-
-
-
+  
   $_->insert();
 
 ?>
