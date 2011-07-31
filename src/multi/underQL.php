@@ -145,6 +145,10 @@ class underQL
       private $db_current_object;
 
       private $rules_objects_list;
+
+      // (in/out) filters
+      private $in_filters;
+      private $out_filters;
       // Errors
       private $err_message;
 
@@ -169,10 +173,13 @@ class underQL
                   $this->error( 'Unable to select DB..!' );
             }
             @ mysql_query( "SET NAMES '" . $UNDERQL['db']['encoding'] . "'" );
+
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
             $this->rules_objects_list = array();
+            $this->in_filters = array();
+            $this->out_filters = array();
             $this->clearDataBuffer( );
       }
 
@@ -495,14 +502,48 @@ class underQL
       {
             global $UNDERQL;
             $l_args_num = func_num_args( );
-            if ( $l_args_num < 2 )
+            if ( $l_args_num < 3 )
                   return false;
-            $l_filter_callback = $UNDERQL['filter']['prefix'] . func_get_arg( 0 );
+            $filter_name = func_get_arg( 0 );
+            $l_filter_callback = $UNDERQL['filter']['prefix'] . $filter_name;
             if ( !function_exists( $l_filter_callback ))
                   return false;
-            for ( $i = 1; $i < $l_args_num; $i++ )
-                  $this->data_buffer[func_get_arg( $i )] = $l_filter_callback( $this->data_buffer[func_get_arg( $i )] );
-            return true;
+
+            switch(func_get_arg(1))
+            {
+              case UQL_FILTER_IN:
+                 case UQL_FILTER_OUT:
+               for ( $i = 2; $i < $l_args_num; $i++ )
+                  {
+                    if(!isset($this->in_filters[$this->table_name][func_get_arg( $i )]))
+                     $this->in_filters[$this->table_name][func_get_arg( $i )] = array($filter_name);
+                    else
+                      {
+                        $_temp = $this->in_filters[$this->table_name][func_get_arg( $i )];
+                        if(!in_array($filter_name,$_temp))
+                          $_temp[@count($_temp)] = $filter_name;
+
+                        $this->in_filters[$this->table_name][func_get_arg( $i )] = $_temp;
+                      }
+                  }
+                  return true;
+              case UQL_FILTER_OUT:
+               for ( $i = 2; $i < $l_args_num; $i++ )
+                  {
+                    if(!isset($this->out_filters[$this->table_name][func_get_arg( $i )]))
+                     $this->out_filters[$this->table_name][func_get_arg( $i )] = array($filter_name);
+                    else
+                      {
+                        $_temp = $this->out_filters[$this->table_name][func_get_arg( $i )];
+                        if(!in_array($filter_name,$_temp))
+                          $_temp[@count($_temp)] = $filter_name;
+
+                        $this->out_filters[$this->table_name][func_get_arg( $i )] = $_temp;
+                      }
+                  }
+                  return true;
+                  default : return false;
+            }
       }
 
 
