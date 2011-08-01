@@ -137,6 +137,7 @@ class underQL
       private $string_fields;
       // contains the name of all string fields to use it to add single qoute to the value.
       private $table_fields_names;
+      private $table_fields_names_all;
       private $table_name;
       // table name that is accepting all instructions from the object
       // DB connectivity
@@ -149,7 +150,7 @@ class underQL
       // (in/out) filters
       private $in_filters;
       private $out_filters;
-      private $is_out_filters_applied;
+      //private $is_out_filters_applied;
       // Errors
       private $err_message;
 
@@ -178,10 +179,12 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
+            $this->table_fields_names_all = array();
+            $this->table_name = null;
             $this->rules_objects_list = array();
             $this->in_filters = array();
             $this->out_filters = array();
-            $this->is_out_filters_applied = array();
+           // $this->is_out_filters_applied = array();
             $this->clearDataBuffer( );
       }
 
@@ -205,6 +208,33 @@ class underQL
             die( '<code><b><font color ="#FF0000">' . $UNDERQL['error']['prefix'] . '</font></b></code><code>' . $msg . '</code>' );
       }
 
+      private function getTableFieldsNames()
+      {
+         if($this->table_name == null)
+          return null;
+
+         $l_count = @count($this->table_fields_names_all);
+         if(isset($this->table_fields_names_all[$this->table_name]))
+          return $this->table_fields_names_all[$this->table_name];
+
+         $this->table_fields_names_all[$this->table_name] = array();
+
+         $sql = sprintf('SHOW COLUMNS FROM `%s`',$this->table_name);
+         $sql_result = @mysql_query($sql);
+         if(!$sql_result)
+          return null;
+
+         $sql_result_count = @mysql_num_rows($sql_result);
+         for($i = 0; $i < $sql_result_count; $i++)
+         {
+           $row = @mysql_fetch_row($sql_result);
+           $this->table_fields_names_all[@count($this->table_fields_names_all)] = $row[0];
+         }
+
+         @mysql_free_result($sql_result);
+         return $this->table_fields_names_all;
+
+      }
 
       public function table( $tname )
       {
@@ -472,8 +502,28 @@ class underQL
 
       public function fetch( )
       {
-            if ( $this->db_query_result )
-                  $this->db_current_object = @ mysql_fetch_object( $this->db_query_result );
+
+          if ( $this->db_query_result )
+           {
+               $this->db_current_object = @ mysql_fetch_object( $this->db_query_result );
+               $l_fields_names = $this->getTableFieldsNames();
+               if($l_fields_names)
+               {
+                 $l_fcount = @count($l_fields_names);
+                 for($i = 0; $i <$l_fcount; $i++)
+                 {
+                    if(isset($this->db_current_object->$l_fields_names[$i]))
+                    {
+                      $this->db_current_object->$l_fields_names[$i] =
+                       $this->applyOutFilter($this->db_current_object->$l_fields_names[$i]);
+                    }
+                 }
+               }
+           }
+           else
+            return null;
+
+
       }
 
 
@@ -577,21 +627,11 @@ class underQL
       }
 
 
-      public function __get( $key )
+      private function applyOutFilter($key)
       {
-            global $UNDERQL;
+          global $UNDERQL;
 
             $value = null;
-
-            if((!isset($this->is_out_filters_applied[$key))
-              ||
-               ($this->is_out_filters_applied[$key] == true))
-            {
-                 if(isset($this->db_current_object->$key))
-                  return $this->db_current_object->$key;
-                 else
-                  return $value;
-            }
 
             if ( $this->db_current_object )
               {
@@ -615,7 +655,7 @@ class underQL
                              else
                                $value = $filters_list[$i]($value,UQL_FILTER_OUT);
 
-                             $this->is_out_filters_applied[$key] = true;
+                             //$this->is_out_filters_applied[$key] = true;
                           }
 
                         }
@@ -624,7 +664,16 @@ class underQL
                     }
               }
 
-            return $value;
+            return ((isset($this->db_current_object->$key)) ? $this->db_current_object->$key : $value);
+      }
+
+      public function __get( $key )
+      {
+         if(isset($this->db_current_object->$key))
+             return $this->db_current_object->$key;
+         else
+             return null;
+         // return $this->applyOutFilter($key);
       }
 
 
