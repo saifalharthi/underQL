@@ -276,6 +276,35 @@ class underQL
             return $this->select( $cols, $extra );
       }
 
+       private function applyInFilter($key,$val)
+      {
+          global $UNDERQL;
+          $value = $val;
+                 if(isset($this->data_buffer[$key]))
+                    {
+                      if((isset($this->in_filters[$this->table_name][$key]))&&
+                        (@count($this->in_filters[$this->table_name][$key]) != 0))
+                        {
+
+                            // apply out filters here
+
+                          $filters_count = @count($this->in_filters[$this->table_name][$key]);
+                          //$value = $this->db_current_object->$key;
+                          $filter_callback = $UNDERQL['filter']['prefix'];
+                          $filters_list = $this->in_filters[$this->table_name][$key];
+                          for($i = 0; $i < $filters_count; $i++)
+                          {
+                             $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
+                             $value = $filter_callback($this->data_buffer[$key],UQL_FILTER_IN);
+                             //$this->is_out_filters_applied[$key] = true;
+                          }
+
+                        }
+
+                    }
+         return $value;
+
+      }
 
       public function __set( $key, $val )
       {
@@ -325,6 +354,7 @@ class underQL
                 return UQL_RULE_FAIL;
              }
 
+           $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
            return UQL_RULE_OK;
       }
 
@@ -651,9 +681,9 @@ class underQL
                           {
                              $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
                              if($value == null)
-                               $value = $filters_list[$i]($this->db_current_object->$key,UQL_FILTER_OUT);
+                               $value = $filter_callback[$i]($this->db_current_object->$key,UQL_FILTER_OUT);
                              else
-                               $value = $filters_list[$i]($value,UQL_FILTER_OUT);
+                               $value = $filter_callback[$i]($value,UQL_FILTER_OUT);
 
                              //$this->is_out_filters_applied[$key] = true;
                           }
