@@ -19,8 +19,8 @@ $_->filter('demo',UQL_FILTER_OUT,'name');
 
 
 for($i = 0; $i < $_->count(); $i++)
- {
-   //echo $_->name.'<br />';
+ {          // echo 'x';
+   echo $_->name.'<br />';
    $_->fetch();
  }
            /*

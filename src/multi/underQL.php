@@ -543,17 +543,21 @@ class underQL
           if ( $this->db_query_result )
            {
                $this->db_current_object = @ mysql_fetch_object( $this->db_query_result );
-               $l_fields_names = $this->table_fields_names;//[$this->table_name];// $this->getTableFieldsNames();
+               if(!$this->db_current_object)
+                return null;
+
+               $l_fields_names = $this->table_fields_names[$this->table_name];//[$this->table_name];// $this->getTableFieldsNames();
                //print_r($l_fields_names);
                if($l_fields_names)
-               {           //print_r($l_fields_names);
-                 $l_fcount = @count($l_fields_names);
-                 for($i = 0; $i <$l_fcount; $i++)
+               {
+                  foreach ($l_fields_names as $field_index => $field_name)
                  {
-                    if(@isset($this->db_current_object->$l_fields_names[$i]))
+                           // echo $this->db_current_object->$field_name.'<br />';
+                    if(@isset($this->db_current_object->$field_name))
                     {
-                      $this->db_current_object->$l_fields_names[$i] =
-                               $this->applyOutFilter($this->db_current_object->$l_fields_names[$i]);
+
+                        $this->db_current_object->$field_name =
+                               $this->applyOutFilter($field_name);
                     }
                  }
                }
@@ -627,6 +631,7 @@ class underQL
                     else
                       {
                         $_temp = $this->out_filters[$this->table_name][func_get_arg( $i )];
+                        print_r($_temp);
                         //if(!in_array($filter_name,$_temp))
                           $_temp[@count($_temp)] = $filter_name;
 
@@ -670,32 +675,32 @@ class underQL
       private function applyOutFilter($key)
       {
           global $UNDERQL;
-
+                   //
             $value = null;
+                  //echo $key;
 
-            if ( $this->db_current_object )
+            if ( isset($this->db_current_object) )
               {
                  if(isset($this->db_current_object->$key))
-                    {
+                    {         //echo 'x';
+                     //print_r($this->out_filters);
+                      $value =   $this->db_current_object->$key;
                       if((isset($this->out_filters[$this->table_name][$key]))&&
                         (@count($this->out_filters[$this->table_name][$key]) != 0))
                         {
-
+                                //echo 'x';
                             // apply out filters here
 
                           $filters_count = @count($this->out_filters[$this->table_name][$key]);
                           $value = $this->db_current_object->$key;
+                          //echo $value;
                           $filter_callback = $UNDERQL['filter']['prefix'];
                           $filters_list = $this->out_filters[$this->table_name][$key];
                           for($i = 0; $i < $filters_count; $i++)
                           {
                              $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
-                             if($value == null)
-                               $value = $filter_callback[$i]($this->db_current_object->$key,UQL_FILTER_OUT);
-                             else
-                               $value = $filter_callback[$i]($value,UQL_FILTER_OUT);
-
-                             //$this->is_out_filters_applied[$key] = true;
+                             $value = $filter_callback($value,UQL_FILTER_OUT);
+                             //echo $filter_callback;
                           }
 
                         }
@@ -727,9 +732,9 @@ class underQL
             $l_fc = @ mysql_num_rows( $l_fq );
             @ mysql_free_result( $l_fq );
             $i = 0;
-            $this->table_fields_names[$this->table_name] = array( );
-            //$this->table_fields_names_all[$this->table_name] = array();
-           // if ( !isset ( $this->table_fields_names_all[] ))
+            if(!isset($this->table_fields_names[$this->table_name]))
+              $this->table_fields_names[$this->table_name] = array( );
+
             $this->string_fields = array( );
             while ( $i < $l_fc )
             {
@@ -739,10 +744,10 @@ class underQL
                         $this->string_fields[@ count( $this->string_fields )] = $l_f->name;
                   }
                    $this->table_fields_names[$this->table_name]
-                                            [@ count( $this->table_fields_names[$this->table_name] )] = $l_f->name;
-                 // $this->table_fields_names_all[$this->table_name][$i] = $l_f->name;
+                     [@count($this->table_fields_names[$this->table_name])]  = $l_f->name;
                   $i++;
             }
+            //print_r($this->table_fields_names);
       }
 
 
