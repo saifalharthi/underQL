@@ -69,4 +69,59 @@ function uql_rule_symbol($rules,$name,$value,$alias = null)
       return UQL_RULE_MATCHED;
 
 }
+
+function uql_rule_between($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'between',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+
+    if((!is_array($rule_value)) ||(@count($rule_value) != 2))
+      return UQL_RULE_NOP;
+
+    if((!is_string($value)) ||(strlen($value) == 0))
+     return UQL_RULE_NOP;
+
+     $value_len = strlen($value);
+    list($min,$max) = $rule_value;
+
+    if($max <= 0)
+     {
+       if($min > 0)
+       {
+         if($value_len >= $min)
+          return UQL_RULE_MATCHED;
+         else
+           return uql_uti_rule_get_error_message('between',$caption);
+       }
+       return UQL_RULE_NOP;
+     }
+     else if($min <= 0)
+     {
+        if($max > 0)
+       {
+         if($value_len <= $max)
+          return UQL_RULE_MATCHED;
+         else
+           return uql_uti_rule_get_error_message('between',$caption);
+
+       }
+       return UQL_RULE_NOP;
+     }
+
+     if($min == $max)
+     {
+      if($value_len > $max)
+       return uql_uti_rule_get_error_message('between',$caption);
+      else
+       return UQL_RULE_MATCHED;
+     }
+     else if(($value_len >= $min) && ($value_len <= $max))
+       return UQL_RULE_MATCHED;
+
+      return uql_uti_rule_get_error_message('between',$caption);
+}
 ?>

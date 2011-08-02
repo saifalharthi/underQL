@@ -20,6 +20,7 @@ $tasks_rules = new UQLRule('tasks');
 $tasks_rules->id('number');
 $tasks_rules->uid('number');
 $tasks_rules->text('required');
+$tasks_rules->text('between',4,4);
 $tasks_rules->parent('number');
 $tasks_rules->duedate('required');
 $tasks_rules->status('requried');
@@ -38,16 +39,13 @@ $tasks->attachRule($tasks_rules);
 
 $tasks->filter('xss',UQL_FILTER_IN,'text');
 
-$tasks->select();
-$tasks->fetch();
 
-echo $tasks->text;
-echo '<br />';
-$tasks->fetch();
-echo $tasks->text;
-echo '<br />';
-$tasks->fetch();
-echo $tasks->text;
+$tasks->text = 'wwwwW';
+
+if(!$tasks->isRulesPassed())
+ die($tasks->getRuleError());
+
+$tasks->insert();
 
 ?>
 
