@@ -34,14 +34,16 @@ $tasks_rules->addAlias('status','الحالة');
 $tasks_rules->addAlias('type','النوع');
 
 $tasks = new underQL('tasks');
-//$tasks->table('tasks');
 $tasks->attachRule($tasks_rules);
 
-$tasks->filter('demo',UQL_FILTER_OUT,'text');
+$tasks->filter('xss',UQL_FILTER_IN,'text');
 
 $tasks->select();
 $tasks->fetch();
 
+echo $tasks->text;
+echo '<br />';
+$tasks->fetch();
 echo $tasks->text;
 echo '<br />';
 $tasks->fetch();

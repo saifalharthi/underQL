@@ -1,0 +1,22 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+
+<UQLDoc version = "1.0" title = "Introduction">
+
+<uContent type = "method" class ="underQL">
+
+<uMethod name = "__construct">
+
+<uParams count = "3" default ="0">
+  <uParam name = "$tname" type = "string"></uParam>
+  <uParam name = "$tname" type = "string" default = "true"></uParam>
+  <uParam name = "$tname" type = "string" default = "true"></uParam>
+</uParams>
+
+<uDescription></uDescription>
+<uAccessModifier type = "public" />
+</uReturn type ="object"></uReturn>
+</uMethod>
+
+</uContent>
+
+</UQLDoc>

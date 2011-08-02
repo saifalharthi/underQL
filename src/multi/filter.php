@@ -1,10 +1,5 @@
 <?php
 
-/*filter input value like insert and update*/
-define ('UQL_FILTER_IN',0xAB);
-/*filter output value like select*/
-define ('UQL_FILTER_OUT',0xAC);
-
 function uql_filter_demo($value,$inout = UQL_FILTER_IN)
 {
       switch($inout)
@@ -13,10 +8,21 @@ function uql_filter_demo($value,$inout = UQL_FILTER_IN)
           return 'IN('.$value.')';
          break;
         case UQL_FILTER_OUT:
-          return 'OUT('.$value.')'; 
+          return 'OUT('.$value.')';
          break;
         default : return $value;
       }
+}
+
+function uql_filter_xss($value,$inout = UQL_FILTER_IN)
+{
+     if($inout == UQL_FILTER_IN)
+     {
+       if(is_string($value))
+        return htmlspecialchars($value);
+     }
+
+     return $value;
 }
 
 ?>

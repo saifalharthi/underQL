@@ -1,0 +1,42 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+
+<UQLDoc version = "1.0" title = "table">
+
+<uContent type = "method" class ="underQL">
+
+<uMethod name = "table">
+
+<uParams count = "3" default ="0">
+  <uParam name = "$tname" type = "string">اسم الجدول المراد التعامل معه</uParam>
+</uParams>
+
+<uDescription>تستخدم هذه الدالة لتحديد الجدول المراد التعامل معه والذي ستتم عليه عمليات قواعد البيانات
+المختلفة مثل الإدخال INSERT والتعديل UPDATE والحذف DELETE ويشمل ذلك أيضاً استخراج البيانات
+بإستخدام SELECT.
+<uNotice>لاتحتاج لإستخدام هذه الدالة إذا قمت بتحديد إسم الجدول أثناء انشاء كائن
+underQL.</uNotice>
+</uDescription>
+<uExample title = "مثال يوضح كيفية استخدام دالة table">
+<![CDATA[
+<?php
+  $_->table('students');
+?>
+]]>
+</uExample>
+<uExample title = "مثال يوضح كيفية استخدام دالة table مع كائن جديد">
+<![CDATA[
+<?php
+
+  $students = underQL();
+  $students->table('students');
+
+?>
+]]>
+</uExample>
+<uAccessModifier type = "public" />
+<uReturn type ="void">لاترجع الدالة أي قيمة</uReturn>
+</uMethod>
+
+</uContent>
+
+</UQLDoc>
