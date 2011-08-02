@@ -627,15 +627,19 @@ class underQL
                for ( $i = 2; $i < $l_args_num; $i++ )
                   {
                     if(!isset($this->out_filters[$this->table_name][func_get_arg( $i )]))
-                     $this->out_filters[$this->table_name][func_get_arg( $i )] = array($filter_name);
+                    {
+                       $this->out_filters[$this->table_name][func_get_arg( $i )] = array($filter_name);
+                       //print_r($this->out_filters);
+                    }
                     else
                       {
                         $_temp = $this->out_filters[$this->table_name][func_get_arg( $i )];
-                        print_r($_temp);
+                        //print_r($_temp);
                         //if(!in_array($filter_name,$_temp))
                           $_temp[@count($_temp)] = $filter_name;
 
                         $this->out_filters[$this->table_name][func_get_arg( $i )] = $_temp;
+
                       }
                   }
                   return true;
@@ -664,8 +668,8 @@ class underQL
             $this->db_query_result = @ mysql_query( $query );
             if ( $this->db_query_result )
             {
-                  if ( @ mysql_num_rows( $this->db_query_result ) > 0 )
-                        $this->fetch( );
+                  /*if ( @ mysql_num_rows( $this->db_query_result ) > 0 )
+                        $this->fetch( ); */
                   return true;
             }
             return false;
@@ -682,25 +686,21 @@ class underQL
             if ( isset($this->db_current_object) )
               {
                  if(isset($this->db_current_object->$key))
-                    {         //echo 'x';
-                     //print_r($this->out_filters);
-                      $value =   $this->db_current_object->$key;
+                    {         //echo @count($this->out_filters[$this->table_name][$key]);
                       if((isset($this->out_filters[$this->table_name][$key]))&&
                         (@count($this->out_filters[$this->table_name][$key]) != 0))
-                        {
-                                //echo 'x';
+                        {          $value = $this->db_current_object->$key;
                             // apply out filters here
 
                           $filters_count = @count($this->out_filters[$this->table_name][$key]);
                           $value = $this->db_current_object->$key;
-                          //echo $value;
                           $filter_callback = $UNDERQL['filter']['prefix'];
                           $filters_list = $this->out_filters[$this->table_name][$key];
                           for($i = 0; $i < $filters_count; $i++)
                           {
+                             // echo $this->db_current_object->$key;
                              $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
-                             $value = $filter_callback($value,UQL_FILTER_OUT);
-                             //echo $filter_callback;
+                             $value = $filter_callback($this->db_current_object->$key,UQL_FILTER_OUT);
                           }
 
                         }

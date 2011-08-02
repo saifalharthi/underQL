@@ -16,6 +16,8 @@ require_once('multi/underQL.php');
 //$_->table('test');
 $_('test');
 $_->filter('demo',UQL_FILTER_OUT,'name');
+$_->fetch();
+
 
 
 for($i = 0; $i < $_->count(); $i++)
