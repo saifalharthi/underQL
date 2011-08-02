@@ -1,17 +1,18 @@
 
 <?php
 
-/*
-                 UnderQL
-           Abdullah E. Almehmadi
-         <cs.abdullah@hotmail.com>
-        6:25 am 26-08-32 : 2011-07-27
-       MPL(Mozilla Public License 1.1)
-    domain registered 6:32 am <www.underql.com>
-              1.0.0.Beta
+/************************************************************/
+/*                          underQL                         */
+/************************************************************/
+/*                   Abdullah E. Almehmadi                  */
+/*                 <cs.abdullah@hotmail.com>                */
+/*               6:25 am 26-08-32 : 2011-07-27              */
+/*              MPL(Mozilla Public License 1.1)             */
+/*        domain registered 6:32 am <www.underql.com>       */
+/*                       1.0.0.Beta                         */
+/************************************************************/
 
 
-*/
 
 require_once('config.php');
 require_once('langs/'.$UNDERQL['lang']['module'].'.php');
@@ -38,6 +39,7 @@ class UQLRule
       public  $rules_error_flag;
       public  $rules_error_message;
 
+      /* Initialization */
       public function __construct( $tname )
       {
             $this->table_name = $tname;
@@ -48,25 +50,31 @@ class UQLRule
             $this->rules_error_message = '';
       }
 
-
+       /* Get the name of a table that relates to the rules */
       public function getTableName( )
       {
             return $this->table_name;
       }
 
-
+      /* Get a list of rules as array*/
       public function getRules( )
       {
             return $this->rules;
       }
 
-
+      /* Get a list of fields aliases as array */
       public function getAliases( )
       {
             return $this->aliases;
       }
 
-
+      /*
+      Add a new rule.
+      $rule_name : Rule name.
+      $field : Field name which you want to apply the rule.
+      $value : Rule value, sometimes null , single value or any other values like
+       array or object.
+      */
       private function addRule( $rule_name, $field, $value )
       {
             if ( !isset ( $this->rules[$field] ))
@@ -77,13 +85,25 @@ class UQLRule
             $this->rules[$field][$rule_name] = $value;
       }
 
-
+      /*
+       Link field name with alias name.
+       $name : field name.
+       $value : alias name.
+      */
       public function addAlias( $name, $value )
       {
             $this->aliases[$name] = $value;
       }
 
+      /*
+       Automatically used when you write the field name as a function to apply
+       rules.
 
+       $func : field name.
+       $args : the first argument consider as a rule name and based-on the rule
+        name, then we can decide the number of remaining args becuse it is differs
+        form rule to rule.
+      */
       public function __call( $func, $args )
       {
             $l_args_count = @ count( $args );
@@ -103,6 +123,12 @@ class UQLRule
                      }
       }
 
+      /*
+        Excute Rule.
+        $rule_name : Rule name.
+        $name : field name.
+        $value : The passed value by user or any other third-party.
+      */
       public function applyRule($rule_name,$name,$value)
       {
         global $UNDERQL;
@@ -116,7 +142,7 @@ class UQLRule
             $l_result = $l_rule_callback($this->rules,$name,$value);
 
          if(is_string($l_result)) // catch error
-         {                 
+         {
            $this->rules_error_message = $l_result;
            $this->rules_error_flag = true;
            return UQL_RULE_NOT_MATCHED;
@@ -188,20 +214,22 @@ class underQL
             $this->clearDataBuffer( );
       }
 
-
+      /* Clean up*/
       public function __destruct( )
       {
             $this->finish( );
       }
 
-
+      /*
+       Reset the temporary values of the underQL object.
+      */
       private function clearDataBuffer( )
       {
             $this->data_buffer = array( );
             $this->err_message = '';
       }
 
-
+      /*Trigger error message*/
       private function error( $msg )
       {
             global $UNDERQL;
@@ -681,7 +709,12 @@ class underQL
             }
       }
 
-
+      /*
+      To apply a checker. Checker is a method that is call your function
+       and return TRUE or FALSE based-on the situation.
+       $checker : Checker name.
+       $value : The value entred by user or any other third-party.
+      */
       public function checker( $checker, $value )
       {
             global $UNDERQL;
@@ -691,11 +724,16 @@ class underQL
             return $checker_callback( $this->data_buffer[$value] );
       }
 
-      /*public function apply(){
+      /*
+      public function apply(){
 
-      }*/
+      }
+      */
 
-
+      /*
+       Excute SQL query.
+       $query : SQL query string.
+      */
       public function query( $query )
       {
             $this->free( );
@@ -710,6 +748,10 @@ class underQL
       }
 
 
+      /*
+          To apply filter on data when you excute SELECT query.
+          $key : Field name the you want to apply output filter on it.
+      */
       private function applyOutFilter($key)
       {
           global $UNDERQL;
@@ -747,6 +789,10 @@ class underQL
             return ((isset($this->db_current_object->$key)) ? $this->db_current_object->$key : $value);
       }
 
+      /*
+        Automatically invoked when you ask to get a field value.
+        $key : Field name.
+      */
       public function __get( $key )
       {
          if(isset($this->db_current_object->$key))
@@ -756,7 +802,13 @@ class underQL
          // return $this->applyOutFilter($key);
       }
 
-
+      /*
+       Read the names of the fields for the current selected table and store them
+        in an array.
+        NOTE : We use it also to store another array that is contains
+        the non-numerical fields becuase we need this array to help us when we calling
+        the quote method to add a single quotes.
+      */
       public function readFields( )
       {
             global $UNDERQL;
@@ -785,7 +837,9 @@ class underQL
             //print_r($this->table_fields_names);
       }
 
-
+      /*
+       Free the database results and close the database.
+      */
       public function finish( )
       {
             $this->free( );
