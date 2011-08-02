@@ -52,4 +52,21 @@ function uql_rule_number($rules,$name,$value,$alias = null)
       return UQL_RULE_MATCHED;
 
 }
+
+//////////////////////////////////////////////
+
+function uql_rule_symbol($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'symbol',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!ctype_punct($value))
+      return uql_uti_rule_get_error_message('symbol',$caption);
+    else
+      return UQL_RULE_MATCHED;
+
+}
 ?>
