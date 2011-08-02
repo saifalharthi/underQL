@@ -725,12 +725,6 @@ class underQL
       }
 
       /*
-      public function apply(){
-
-      }
-      */
-
-      /*
        Excute SQL query.
        $query : SQL query string.
       */
@@ -852,6 +846,6 @@ class underQL
 
 /* underQL instance (object) */
 
-
 $_ = new underQL( );
+$underQL = &$_;
 ?>

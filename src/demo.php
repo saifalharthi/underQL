@@ -4,6 +4,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
+<meta content="ar-sa" http-equiv="Content-Language" />
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
   <title>Hello!</title>
 </head>
 
@@ -13,39 +15,37 @@
 
 require_once('multi/underQL.php');
 
-$test_rules = new UQLRule('test');
-$test_rules->addAlias('id','الرقم');
+$tasks_rules = new UQLRule('tasks');
 
-$test_rules->name('required');
-$test_rules->name('length',10);
-$test_rules->name('number');
+$tasks_rules->id('number');
+$tasks_rules->uid('number');
+$tasks_rules->text('required');
+$tasks_rules->parent('number');
+$tasks_rules->duedate('required');
+$tasks_rules->status('requried');
+$tasks_rules->type('required');
 
-$test_rules->addAlias('name','الإسم');
+$tasks_rules->addAlias('id','الرقم');
+$tasks_rules->addAlias('uid','رقم المستخدم');
+$tasks_rules->addAlias('text','المحتوى');
+$tasks_rules->addAlias('parent','التصنيف');
+$tasks_rules->addAlias('duedate','التاريخ');
+$tasks_rules->addAlias('status','الحالة');
+$tasks_rules->addAlias('type','النوع');
 
-$test = new underQL();
-$test->table('test');
+$tasks = new underQL();
+$tasks->table('tasks');
+$tasks->attachRule($tasks_rules);
 
-$test->filter('demo',UQL_FILTER_IN,'name');
-$test->filter('demo',UQL_FILTER_OUT,'name');
-$test->attachRule($test_rules);
+$tasks->filter('demo',UQL_FILTER_OUT,'text');
 
-/*$test->select('*','WHERE id =450');
-$test->fetch();
+$tasks->select();
+$tasks->fetch();
 
-for($i = 0; $i < $test->count(); $i++)
- {
-   echo $test->name.'<br />';
-   $test->fetch();
- }
-*/
-
-$test->name = '45';
-
-if(!$test->isRulesPassed())
- die($test->getRuleError());
-
-$test->insert();
-
+echo $tasks->text;
+echo '<br />';
+$tasks->fetch();
+echo $tasks->text;
 
 ?>
 
