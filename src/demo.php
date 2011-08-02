@@ -17,21 +17,24 @@ $test_rules = new UQLRule('test');
 $test_rules->addAlias('id','الرقم');
 
 $test_rules->name('required');
-$test_rules->name('length',25);
+$test_rules->name('length',5);
 $test_rules->addAlias('name','الإسم');
 
 $test = new underQL();
 $test->table('test');
+
+$test->filter('demo',UQL_FILTER_IN,'name');
+$test->filter('demo',UQL_FILTER_OUT,'name');
 $test->attachRule($test_rules);
 
-$test->id = 5005;
-$test->name = '';
+$test->select('*','WHERE id =450');
+$test->fetch();
 
- if(!$test->isRulesPassed())
-     die($test->getRuleError());
-
-echo $test->insert();
-
+for($i = 0; $i < $test->count(); $i++)
+ {
+   echo $test->name.'<br />';
+   $test->fetch();
+ }
 
 
 
