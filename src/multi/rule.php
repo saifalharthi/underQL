@@ -21,7 +21,7 @@ function uql_rule_length($rules, $name, $value,$alias = null)
 
 function uql_rule_required($rules,$name,$value,$alias = null)
 {
-    $rule_result = uql_uti_rule_init($rules,'length',$name,$alias);
+    $rule_result = uql_uti_rule_init($rules,'required',$name,$alias);
      if(!$rule_result)
        return UQL_RULE_NOP;
 

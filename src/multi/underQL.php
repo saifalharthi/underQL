@@ -137,7 +137,7 @@ class underQL
       private $string_fields;
       // contains the name of all string fields to use it to add single qoute to the value.
       private $table_fields_names;
-      private $table_fields_names_all;
+     // private $table_fields_names_all;
       private $table_name;
       // table name that is accepting all instructions from the object
       // DB connectivity
@@ -179,7 +179,7 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
-            $this->table_fields_names_all = array();
+            //$this->table_fields_names_all = array();
             $this->table_name = null;
             $this->rules_objects_list = array();
             $this->in_filters = array();
@@ -208,7 +208,7 @@ class underQL
             die( '<code><b><font color ="#FF0000">' . $UNDERQL['error']['prefix'] . '</font></b></code><code>' . $msg . '</code>' );
       }
 
-      private function getTableFieldsNames()
+      /*private function getTableFieldsNames()
       {
          if($this->table_name == null)
           return null;
@@ -228,13 +228,16 @@ class underQL
          for($i = 0; $i < $sql_result_count; $i++)
          {
            $row = @mysql_fetch_row($sql_result);
+           //print_r($row);
+           echo $row[3];
            $this->table_fields_names_all[@count($this->table_fields_names_all)] = $row[0];
+
          }
 
          @mysql_free_result($sql_result);
          return $this->table_fields_names_all;
 
-      }
+      }*/
 
       public function table( $tname )
       {
@@ -318,12 +321,15 @@ class underQL
               }
 
 
-           if(@count($this->data_buffer) == 0) // no fields
-             return UQL_RULE_OK;
+         /*  if(@count($this->data_buffer) == 0) // no fields
+             return UQL_RULE_OK; */
 
            $l_rules_object_count = @count($this->rules_objects_list);
            if($l_rules_object_count == 0)
-            return UQL_RULE_OK;
+           {
+             $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+              return UQL_RULE_OK;
+           }
 
            if(!isset($this->rules_objects_list[$this->table_name]))
              return UQL_RULE_OK;
@@ -355,6 +361,7 @@ class underQL
              }
 
            $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+
            return UQL_RULE_OK;
       }
 
@@ -536,23 +543,23 @@ class underQL
           if ( $this->db_query_result )
            {
                $this->db_current_object = @ mysql_fetch_object( $this->db_query_result );
-               $l_fields_names = $this->getTableFieldsNames();
+               $l_fields_names = $this->table_fields_names;//[$this->table_name];// $this->getTableFieldsNames();
+               //print_r($l_fields_names);
                if($l_fields_names)
-               {
+               {           //print_r($l_fields_names);
                  $l_fcount = @count($l_fields_names);
                  for($i = 0; $i <$l_fcount; $i++)
                  {
-                    if(isset($this->db_current_object->$l_fields_names[$i]))
+                    if(@isset($this->db_current_object->$l_fields_names[$i]))
                     {
                       $this->db_current_object->$l_fields_names[$i] =
-                       $this->applyOutFilter($this->db_current_object->$l_fields_names[$i]);
+                               $this->applyOutFilter($this->db_current_object->$l_fields_names[$i]);
                     }
                  }
                }
            }
            else
             return null;
-
 
       }
 
@@ -587,14 +594,16 @@ class underQL
             if ( $l_args_num < 3 )
                   return false;
             $filter_name = func_get_arg( 0 );
+
             $l_filter_callback = $UNDERQL['filter']['prefix'] . $filter_name;
+
             if ( !function_exists( $l_filter_callback ))
                   return false;
 
             switch(func_get_arg(1))
             {
               case UQL_FILTER_IN:
-                 case UQL_FILTER_OUT:
+
                for ( $i = 2; $i < $l_args_num; $i++ )
                   {
                     if(!isset($this->in_filters[$this->table_name][func_get_arg( $i )]))
@@ -604,6 +613,7 @@ class underQL
                         $_temp = $this->in_filters[$this->table_name][func_get_arg( $i )];
                        // if(!in_array($filter_name,$_temp))
                           $_temp[@count($_temp)] = $filter_name;
+
 
                         $this->in_filters[$this->table_name][func_get_arg( $i )] = $_temp;
                       }
@@ -710,14 +720,16 @@ class underQL
       public function readFields( )
       {
             global $UNDERQL;
-            if ( isset ( $UNDERQL['table'][$this->table_name] ))
-                  return;
+           /* if ( isset ( $UNDERQL['table'][$this->table_name] ))
+                  return; */
             $l_fs = @ mysql_list_fields( $UNDERQL['db']['name'], $this->table_name );
             $l_fq = @ mysql_query( 'SHOW COLUMNS FROM `' . $this->table_name . '`' );
             $l_fc = @ mysql_num_rows( $l_fq );
             @ mysql_free_result( $l_fq );
             $i = 0;
-            $this->table_fields_names = array( );
+            $this->table_fields_names[$this->table_name] = array( );
+            //$this->table_fields_names_all[$this->table_name] = array();
+           // if ( !isset ( $this->table_fields_names_all[] ))
             $this->string_fields = array( );
             while ( $i < $l_fc )
             {
@@ -725,8 +737,10 @@ class underQL
                   if ( $l_f->numeric != 1 )
                   {
                         $this->string_fields[@ count( $this->string_fields )] = $l_f->name;
-                        $this->table_fields_names[@ count( $this->table_fields_names )] = $l_f->name;
                   }
+                   $this->table_fields_names[$this->table_name]
+                                            [@ count( $this->table_fields_names[$this->table_name] )] = $l_f->name;
+                 // $this->table_fields_names_all[$this->table_name][$i] = $l_f->name;
                   $i++;
             }
       }
