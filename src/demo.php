@@ -15,7 +15,7 @@ require_once('multi/underQL.php');
 
 //$_->table('test');
 $_('test');
-$_->filter('demo',UQL_FILTER_OUT,'id','name');
+$_->filter('demo',UQL_FILTER_OUT,'name');
 $_->fetch();
 
 

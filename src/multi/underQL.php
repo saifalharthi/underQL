@@ -720,7 +720,8 @@ class underQL
             if ( isset($this->db_current_object) )
               {
                  if(isset($this->db_current_object->$key))
-                    {         //echo @count($this->out_filters[$this->table_name][$key]);
+                    {
+                      $value = $this->db_current_object->$key;
                       if((isset($this->out_filters[$this->table_name][$key]))&&
                         (@count($this->out_filters[$this->table_name][$key]) != 0))
                         {          $value = $this->db_current_object->$key;
