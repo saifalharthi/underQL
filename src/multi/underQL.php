@@ -167,7 +167,7 @@ class underQL
       private $table_name;
       // table name that is accepting all instructions from the object
       // DB connectivity
-      private $db_handle;
+      public static $db_handle = null;
       private $db_query_result;
       private $db_current_object;
 
@@ -180,24 +180,31 @@ class underQL
       // Errors
       private $err_message;
 
-      /* Initialization */
+      /* Initialization
+      $tname : table name
+      */
 
 
-      public function __construct( $host = null, $user = null, $pass = null, $dbname = null )
+      public function __construct( $tname = null )
       {
             global $UNDERQL;
 
-            $l_host   = ($host   == null) ? $UNDERQL['db']['host']     : $host;
-            $l_user   = ($user   == null) ? $UNDERQL['db']['user']     : $user;
-            $l_pass   = ($pass   == null) ? $UNDERQL['db']['password'] : $pass;
-            $l_dbname = ($dbname == null) ? $UNDERQL['db']['name']     : $dbname;
+            $l_host   = $UNDERQL['db']['host'];
+            $l_user   = $UNDERQL['db']['user'];
+            $l_pass   = $UNDERQL['db']['password'];
+            $l_dbname = $UNDERQL['db']['name'];
 
-            $this->db_handle = @ mysql_connect( $UNDERQL['db']['host'], $UNDERQL['db']['user'], $UNDERQL['db']['password'] );
-            if ( !$this->db_handle )
+            if(!underQL::$db_handle)
+              underQL::$db_handle = @ mysql_connect(
+               $UNDERQL['db']['host'],
+               $UNDERQL['db']['user'],
+               $UNDERQL['db']['password'] );
+
+            if ( !underQL::$db_handle )
                   $this->error( 'Unable to connect to DB..!' );
             if ( !( @ mysql_select_db( $UNDERQL['db']['name'] )))
             {
-                  @ mysql_close( $this->db_handle );
+                  @ mysql_close( underQL::$db_handle );
                   $this->error( 'Unable to select DB..!' );
             }
             @ mysql_query( "SET NAMES '" . $UNDERQL['db']['encoding'] . "'" );
@@ -206,12 +213,16 @@ class underQL
             $this->db_query_result = false;
             $this->table_fields_names = array( );
             //$this->table_fields_names_all = array();
-            $this->table_name = null;
             $this->rules_objects_list = array();
             $this->in_filters = array();
             $this->out_filters = array();
            // $this->is_out_filters_applied = array();
             $this->clearDataBuffer( );
+
+            $this->table_name = $tname;
+
+            if($tname != null)
+              $this->table($tname);
       }
 
       /* Clean up*/
@@ -449,7 +460,7 @@ class underQL
             foreach ( $this->data_buffer as $key => $val )
             {
                   if ( in_array( $key, $this->string_fields ))
-                        $this->data_buffer[$key] = @"'".mysql_real_escape_string($val,$this->db_handle)."'";
+                        $this->data_buffer[$key] = @"'".mysql_real_escape_string($val,underQL::$db_handle)."'";
                   else
                         $this->data_buffer[$key] = $val;
             }
@@ -629,9 +640,9 @@ class underQL
       /* Get the number of affected rows from the last query */
       public function affected( )
       {
-            if ( ( !$this->db_handle ))
+            if ( ( !underQL::$db_handle ))
                   return 0;
-            return @ mysql_affected_rows( $this->db_handle );
+            return @ mysql_affected_rows( underQL::$db_handle );
       }
 
       /*
@@ -837,8 +848,8 @@ class underQL
       public function finish( )
       {
             $this->free( );
-            if ( $this->db_handle )
-                  @ mysql_close( $this->db_handle );
+            if ( underQL::$db_handle )
+                  @ mysql_close( underQL::$db_handle );
       }
 
 

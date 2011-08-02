@@ -33,8 +33,8 @@ $tasks_rules->addAlias('duedate','التاريخ');
 $tasks_rules->addAlias('status','الحالة');
 $tasks_rules->addAlias('type','النوع');
 
-$tasks = new underQL();
-$tasks->table('tasks');
+$tasks = new underQL('tasks');
+//$tasks->table('tasks');
 $tasks->attachRule($tasks_rules);
 
 $tasks->filter('demo',UQL_FILTER_OUT,'text');
