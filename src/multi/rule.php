@@ -36,5 +36,20 @@ function uql_rule_required($rules,$name,$value,$alias = null)
 
 }
 
+//////////////////////////////////////////////
 
+function uql_rule_number($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'number',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!ctype_digit($value))
+      return uql_uti_rule_get_error_message('number',$caption);
+    else
+      return UQL_RULE_MATCHED;
+
+}
 ?>
