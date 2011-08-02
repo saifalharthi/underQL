@@ -208,42 +208,16 @@ class underQL
             die( '<code><b><font color ="#FF0000">' . $UNDERQL['error']['prefix'] . '</font></b></code><code>' . $msg . '</code>' );
       }
 
-      /*private function getTableFieldsNames()
-      {
-         if($this->table_name == null)
-          return null;
-
-         $l_count = @count($this->table_fields_names_all);
-         if(isset($this->table_fields_names_all[$this->table_name]))
-          return $this->table_fields_names_all[$this->table_name];
-
-         $this->table_fields_names_all[$this->table_name] = array();
-
-         $sql = sprintf('SHOW COLUMNS FROM `%s`',$this->table_name);
-         $sql_result = @mysql_query($sql);
-         if(!$sql_result)
-          return null;
-
-         $sql_result_count = @mysql_num_rows($sql_result);
-         for($i = 0; $i < $sql_result_count; $i++)
-         {
-           $row = @mysql_fetch_row($sql_result);
-           //print_r($row);
-           echo $row[3];
-           $this->table_fields_names_all[@count($this->table_fields_names_all)] = $row[0];
-
-         }
-
-         @mysql_free_result($sql_result);
-         return $this->table_fields_names_all;
-
-      }*/
-
+      /*
+      Set current table.
+      $tname : table name
+      */
       public function table( $tname )
       {
             global $UNDERQL;
-            if ( !array_key_exists( $tname, $UNDERQL['table'] ))
+            if ( !array_key_exists( $tname, $this->table_fields_names ))
             {
+              /* Get tables list for the current database to check if $tname is a valid table name*/
                   $l_result = @ mysql_query( 'SHOW TABLES FROM `' . $UNDERQL['db']['name'] . '`' );
                   $l_count = @ mysql_num_rows( $l_result );
                   if ( $l_count == 0 )
@@ -253,33 +227,48 @@ class underQL
                         if ( strcmp( $tname, $l_t[0] ) == 0 )
                         {
                               $this->table_name = $tname;
-                              // $this->string_fields = $UNDERQL['table'][$tname] = array();
                               @ mysql_free_result( $l_result );
                               $this->readFields( );
                               return;
                         }
                   }
+                  if( $l_result )
+                     @ mysql_free_result( $l_result );
             }
             else
             {
-            //$this->string_fields = $UNDERQL['table'][$tname];
+             /*
+             To avoid double check, therefore, if the table exist tables array
+              that's menas we don't need to check again*/
                   $this->table_name = $tname;
                   $this->readFields( );
-                  @ mysql_free_result( $l_result );
                   return;
             }
             @ mysql_free_result( $l_result );
             $this->error( $tname . ' dose not exist' );
       }
 
-
+      /*
+       It will used when you call underQL object($_) as a function to execute a select query
+       $tname : current table.
+       $cols  : columns that you want to appear in the query, * for all columns.
+       $extra : you can put an extra SQL like WHERE,LIMIT ORDER BY ...etc.
+      */
       public function __invoke( $tname, $cols = '*', $extra = null )
       {
             $this->table( $tname );
             return $this->select( $cols, $extra );
       }
 
-       private function applyInFilter($key,$val)
+      /*
+       To apply input filter and it is invoked when we use INSERT OR UPDATE
+        SQL command to do something with a value of a specific field.
+
+        $key : field name.
+        $val : field value that you would to INSERT or UPDATE it to the table.
+      */
+
+      private function applyInFilter($key,$val)
       {
           global $UNDERQL;
           $value = $val;
@@ -309,6 +298,13 @@ class underQL
 
       }
 
+      /*
+      Automatically used when you try to INSERT or UPDATE something.
+
+      $key : field name.
+      $val : field value.
+
+      */
       public function __set( $key, $val )
       {
             $this->data_buffer[$key] = $val;
@@ -319,10 +315,6 @@ class underQL
                if($l_target->rules_error_flag)
                    return UQL_RULE_FAIL;
               }
-
-
-         /*  if(@count($this->data_buffer) == 0) // no fields
-             return UQL_RULE_OK; */
 
            $l_rules_object_count = @count($this->rules_objects_list);
            if($l_rules_object_count == 0)
@@ -351,10 +343,8 @@ class underQL
 
              foreach($rules_list as $rule_name =>$rule_value)
              {
-               // echo $rule_name.$rule_value.'<br />';
                if(!isset($this->data_buffer[$key]))
                 continue;
-               // echo $field.' : '.$rule_name.'('.$rule_value.')<br />';
                if($l_target_rule->applyRule($rule_name,$key,$this->data_buffer[$key])
                   == UQL_RULE_NOT_MATCHED)
                 return UQL_RULE_FAIL;
@@ -365,6 +355,9 @@ class underQL
            return UQL_RULE_OK;
       }
 
+      /*
+      Check if all rules passed and return TRUE when success, otherwise, return FALSE.
+      */
       public function isRulesPassed()
       {
         if(!isset($this->rules_objects_list[$this->table_name]))
@@ -376,6 +369,10 @@ class underQL
         return ($l_target->rules_error_flag == false);
       }
 
+      /*
+       if isRulesPassed method return FALSE , then this method will return a string
+        that contains the error message, otherwise, return emptry string.
+      */
       public function getRuleError()
       {
         if(!isset($this->rules_objects_list[$this->table_name]))
@@ -389,6 +386,10 @@ class underQL
         return '';
       }
 
+      /*
+      To attach UQLRule object that contains the rule for current table.
+      $rule_object: UQLRule object that contains the rules of the current table fields.
+      */
       public function attachRule($rule_object)
       {
           if(!($rule_object instanceof UQLRule))
@@ -398,13 +399,21 @@ class underQL
           return true;
       }
 
+      /*
+      To detach UQLRule object that contains the rule and avoid the current table ruels.
+      $rule_object: UQLRule object that contains the rules of the current table fields.
+      */
       public function detachRule($tname)
       {
         if(isset($this->rules_objects_list[$tname]))
          $this->rules_objects_list[$tname] = null;
       }
 
-
+      /*
+       This method used by underQL to add single quotes to the non-numeric fields value
+        like VARCHAR, TEXT ..etc. However, it is used when we try to formatting the
+        INSERT or UPDATE command.
+      */
       private function quote( )
       {
             if ( @ count( $this->data_buffer ) == 0 )
@@ -419,7 +428,9 @@ class underQL
       }
 
 
-
+      /*
+        Build the INSERT command and return a string that is contains a SQL INSERT command.
+      */
       private function formatInsertCommand( )
       {
             $data_buffer_length = @ count( $this->data_buffer );
@@ -447,7 +458,9 @@ class underQL
             return $sql;
       }
 
-
+      /*
+       Apply SQL INSERT.
+      */
       public function insert( )
       {
             $sql_insert_string = $this->formatInsertCommand( );
@@ -459,7 +472,9 @@ class underQL
             return $l_result;
       }
 
-
+       /*
+        Build the UPDATE command and return a string that is contains a SQL UPDATE command.
+      */
       private function formatUpdateCommand( $where = null )
       {
             $data_buffer_length = @ count( $this->data_buffer );
@@ -482,7 +497,9 @@ class underQL
             return $sql;
       }
 
-
+      /*
+       Apply SQL UPDATE.
+      */
       public function update( $where = null )
       {
             $sql_update_string = $this->formatUpdateCommand( $where );
@@ -494,7 +511,9 @@ class underQL
             return $l_result;
       }
 
-
+       /*
+        Build the DELETE command and return a string that is contains a SQL DELETE command.
+      */
       private function formatDeleteCommand( $where = null )
       {
             $sql = 'DELETE FROM ' . $this->table_name;
@@ -503,7 +522,7 @@ class underQL
             return $sql;
       }
 
-
+     /* Apply SQL DELETE */
       public function delete( $where = null )
       {
             $sql_delete_string = $this->formatDeleteCommand( $where );
@@ -512,7 +531,9 @@ class underQL
             return $l_result;
       }
 
-
+       /*
+        Build the SELECT command and return a string that is contains a SQL SELECT command.
+      */
       private function formatSelectCommand( $cols = '*', $extra = null )
       {
             $sql = 'SELECT ' . $cols . ' FROM ' . $this->table_name;
@@ -521,7 +542,7 @@ class underQL
             return $sql;
       }
 
-
+      /* Apply SQL SELECT */
       public function select( $cols = '*', $extra = null )
       {
             $sql_select_string = $this->formatSelectCommand( $cols, $extra );
@@ -536,7 +557,9 @@ class underQL
             return $l_result;
       }
 
-
+      /*
+       Fetch one row from the current SELECT result.
+      */
       public function fetch( )
       {
 
@@ -567,7 +590,7 @@ class underQL
 
       }
 
-
+      /* Get the count of the last SQL SELECT query */
       public function count( )
       {
             if ( !$this->db_query_result )
@@ -575,7 +598,7 @@ class underQL
             return @ mysql_num_rows( $this->db_query_result );
       }
 
-
+      /* Get the number of affected rows from the last query */
       public function affected( )
       {
             if ( ( !$this->db_handle ))
@@ -583,14 +606,25 @@ class underQL
             return @ mysql_affected_rows( $this->db_handle );
       }
 
-
+      /*
+       Free the result from the last SELECT query.
+      */
       public function free( )
       {
             if ( $this->db_query_result )
                   @ mysql_free_result( $this->db_query_result );
       }
 
+      /*
+      To apply your IN or OUT filter.
+      $filter_name : The first parameter that is accepting the filter name.
+      $filter_dir : The second parameter that is acceptiong the dirction of the data
+       and its value are : UQL_FILTER_IN which is used with INSERT and UPDATE queries,
+       and UQL_FILTER_OUT which is used with SELECT queries.
 
+       After that you can use any number of parameters to specifying the names of the
+       fields that you want to apply $filter_name on them.
+      */
       public function filter( )
       {
             global $UNDERQL;
