@@ -13,23 +13,24 @@
 
 require_once('multi/underQL.php');
 
-//$_->table('test');
-$_('test');
-$_->filter('demo',UQL_FILTER_OUT,'name');
-$_->fetch();
+$test_rules = new UQLRule('test');
+$test_rules->addAlias('id','الرقم');
 
+$test_rules->name('required');
+$test_rules->name('length',25);
+$test_rules->addAlias('name','الإسم');
 
+$test = new underQL();
+$test->table('test');
+$test->attachRule($test_rules);
 
-for($i = 0; $i < $_->count(); $i++)
- {          // echo 'x';
-   echo $_->id.'<br />';
-   echo $_->name.'<br />';
-   $_->fetch();
- }
-           /*
-$_->name = 'Abdullah';
+$test->id = 5005;
+$test->name = '';
 
-$_->insert();*/
+ if(!$test->isRulesPassed())
+     die($test->getRuleError());
+
+echo $test->insert();
 
 
 

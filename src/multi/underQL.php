@@ -116,7 +116,7 @@ class UQLRule
             $l_result = $l_rule_callback($this->rules,$name,$value);
 
          if(is_string($l_result)) // catch error
-         {
+         {                 
            $this->rules_error_message = $l_result;
            $this->rules_error_flag = true;
            return UQL_RULE_NOT_MATCHED;
