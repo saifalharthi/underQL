@@ -13,7 +13,7 @@
 
 <?php
 
-require_once('multi/underQL.php');
+require_once('single/underQL.php');
 
 $tasks_rules = new UQLRule('tasks');
 
@@ -38,10 +38,10 @@ $tasks = new underQL('tasks');
 $tasks->attachRule($tasks_rules);
 
 $tasks->filter('xss',UQL_FILTER_IN,'text');
-$tasks->filter('nohtml',UQL_FILTER_IN,'duedate','status','type');
+$tasks->filter('html',UQL_FILTER_IN,'duedate','status','type');
 
 
-$tasks->text = 'wwwwW';
+$tasks->text = 'wwww';
 
 if(!$tasks->isRulesPassed())
  die($tasks->getRuleError());
