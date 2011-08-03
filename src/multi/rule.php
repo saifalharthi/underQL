@@ -124,4 +124,56 @@ function uql_rule_between($rules,$name,$value,$alias = null)
 
       return uql_uti_rule_get_error_message('between',$caption);
 }
+
+//////////////////////////////////////////////
+
+function uql_rule_hex($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'hex',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!ctype_xdigit($value))
+      return uql_uti_rule_get_error_message('hex',$caption);
+    else
+      return UQL_RULE_MATCHED;
+
+}
+
+//////////////////////////////////////////////
+
+function uql_rule_alpha($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'alpha',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!ctype_alpha($value))
+      return uql_uti_rule_get_error_message('alpha',$caption);
+    else
+      return UQL_RULE_MATCHED;
+
+}
+
+//////////////////////////////////////////////
+
+function uql_rule_alphanum($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'alphanum',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!ctype_alnum($value))
+      return uql_uti_rule_get_error_message('alphanum',$caption);
+    else
+      return UQL_RULE_MATCHED;
+
+}
+
 ?>

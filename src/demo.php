@@ -38,6 +38,7 @@ $tasks = new underQL('tasks');
 $tasks->attachRule($tasks_rules);
 
 $tasks->filter('xss',UQL_FILTER_IN,'text');
+$tasks->filter('nohtml',UQL_FILTER_IN,'duedate','status','type');
 
 
 $tasks->text = 'wwwwW';
