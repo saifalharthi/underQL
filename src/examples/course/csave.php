@@ -4,8 +4,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
-<meta content="ar-sa" http-equiv="Content-Language" />
-<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
   <title>Hello!</title>
 </head>
 
@@ -13,8 +11,17 @@
 
 <?php
 
-require_once('multi/underQL.php');
+require_once('../../multi/underQL.php');
+require_once('rules.php');
 
+$course->name = $_POST['cname'];
+$course->description = $_POST['cdesc'];
+
+
+if(!$course->isRulesPassed())
+ die($course->getRuleError());
+
+$course->insert();
 
 ?>
 

@@ -8,7 +8,7 @@
 $UNDERQL['db']['host'] = 'localhost';
 
 /* database name */
-$UNDERQL['db']['name'] = 'tasky';
+$UNDERQL['db']['name'] = 'courses';
 
 /* database user name */
 $UNDERQL['db']['user'] = 'root';

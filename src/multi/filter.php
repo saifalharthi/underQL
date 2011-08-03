@@ -39,4 +39,5 @@ function uql_filter_space($value,$inout = UQL_FILTER_IN)
     return @trim($value);
   return $value;
 }
+
 ?>
