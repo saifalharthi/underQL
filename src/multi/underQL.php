@@ -730,6 +730,7 @@ class underQL
       {
             global $UNDERQL;
             $checker_callback = $UNDERQL['checker']['prefix'] . $checker;
+
             if ( !function_exists( $checker_callback ))
                   return false;
             return $checker_callback( $this->data_buffer[$value] );

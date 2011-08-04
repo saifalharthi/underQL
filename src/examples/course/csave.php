@@ -17,7 +17,6 @@ require_once('rules.php');
 $course->name = $_POST['cname'];
 $course->description = $_POST['cdesc'];
 
-
 if(!$course->isRulesPassed())
  die($course->getRuleError());
 
