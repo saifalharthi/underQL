@@ -479,7 +479,7 @@ class UQLRule
         $l_rule_callback = $UNDERQL['rule']['uql_prefix'].$rule_name;
         if(!function_exists($l_rule_callback))
          return UQL_RULE_NOP;
-//         echo $l_rule_callback;
+
          if(isset($this->aliases[$name]))
             $l_result = $l_rule_callback($this->rules,$name,$value,$this->aliases[$name]);
          else
@@ -501,27 +501,32 @@ class UQLRule
 
 class underQL
 {
-//used by insert instruction
+
+      //used by insert & update instruction
       private $data_buffer;
-      // used to stor key/value that entered by user
-      private $string_fields;
       // contains the name of all string fields to use it to add single qoute to the value.
+      private $string_fields;
+      // fields names for the current table.
       private $table_fields_names;
-     // private $table_fields_names_all;
-      private $table_name;
-      // table name that is accepting all instructions from the object
+     // table name that is accepting all instructions from the object
+     private $table_name;
+
+
       // DB connectivity
       public static $db_handle = null;
+      // query result
       private $db_query_result;
+      //used by fetch method to store fetched row as object.
       private $db_current_object;
-
+      // List of UQLRule objects that are used to store the rules.
       private $rules_objects_list;
 
-      // (in/out) filters
+      // In filter array that is used to store filters names that will apply in INSERT or UPDATE query.
       private $in_filters;
+     // Out filter array that is used to store filters names that will apply in SELECT query.
       private $out_filters;
-      //private $is_out_filters_applied;
-      // Errors
+
+      // String that contains the last error message and it is used by error method.
       private $err_message;
 
       /* Initialization
@@ -532,11 +537,6 @@ class underQL
       public function __construct( $tname = null )
       {
             global $UNDERQL;
-
-            $l_host   = $UNDERQL['db']['host'];
-            $l_user   = $UNDERQL['db']['user'];
-            $l_pass   = $UNDERQL['db']['password'];
-            $l_dbname = $UNDERQL['db']['name'];
 
             if(!underQL::$db_handle)
               underQL::$db_handle = @ mysql_connect(
@@ -556,17 +556,15 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
-            //$this->table_fields_names_all = array();
             $this->rules_objects_list = array();
             $this->in_filters = array();
             $this->out_filters = array();
-           // $this->is_out_filters_applied = array();
             $this->clearDataBuffer( );
-
-            $this->table_name = $tname;
 
             if($tname != null)
               $this->table($tname);
+            else
+              $this->table_name = $tname;
       }
 
       /* Clean up*/
@@ -637,9 +635,11 @@ class underQL
        $cols  : columns that you want to appear in the query, * for all columns.
        $extra : you can put an extra SQL like WHERE,LIMIT ORDER BY ...etc.
       */
-      public function __invoke( $tname, $cols = '*', $extra = null )
+      public function __invoke( $tname = null, $cols = '*', $extra = null )
       {
-            $this->table( $tname );
+            if($tname != null)
+                 $this->table( $tname );
+
             return $this->select( $cols, $extra );
       }
 
@@ -660,18 +660,14 @@ class underQL
                       if((isset($this->in_filters[$this->table_name][$key]))&&
                         (@count($this->in_filters[$this->table_name][$key]) != 0))
                         {
-
                             // apply out filters here
-
                           $filters_count = @count($this->in_filters[$this->table_name][$key]);
-                          //$value = $this->db_current_object->$key;
                           $filter_callback = $UNDERQL['filter']['prefix'];
                           $filters_list = $this->in_filters[$this->table_name][$key];
                           for($i = 0; $i < $filters_count; $i++)
                           {
                              $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
                              $value = $filter_callback($this->data_buffer[$key],UQL_FILTER_IN);
-                             //$this->is_out_filters_applied[$key] = true;
                           }
 
                         }
@@ -696,41 +692,49 @@ class underQL
               {
                $l_target = $this->rules_objects_list[$this->table_name];
                if($l_target->rules_error_flag)
-                   return UQL_RULE_FAIL;
+                   {
+                     $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+                     return UQL_RULE_FAIL;
+                   }
               }
 
            $l_rules_object_count = @count($this->rules_objects_list);
-           if($l_rules_object_count == 0)
+           if(($l_rules_object_count == 0) || (!isset($this->rules_objects_list[$this->table_name])))
            {
              $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
               return UQL_RULE_OK;
            }
 
-           if(!isset($this->rules_objects_list[$this->table_name]))
-             return UQL_RULE_OK;
-
            $l_target_rule = $this->rules_objects_list[$this->table_name];
 
+           if($l_target_rule == null)
+           {
+              $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+              return UQL_RULE_OK;
+           }
+
            $l_rules = $l_target_rule->getRules();
-           if(@count($l_rules) == 0)
-            return UQL_RULE_OK;
 
-
-             if(strcmp($key,'UQL') == 0)
-              return UQL_RULE_OK;
-
-             if(!isset($l_rules[$key]))
-              return UQL_RULE_OK;
+             if((@count($l_rules) == 0) || (strcmp($key,'UQL') == 0) || (!isset($l_rules[$key])))
+               {
+                 $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+                 return UQL_RULE_OK;
+               }
 
              $rules_list = $l_rules[$key];
 
              foreach($rules_list as $rule_name =>$rule_value)
              {
+               //value not assigned
                if(!isset($this->data_buffer[$key]))
                 continue;
+
                if($l_target_rule->applyRule($rule_name,$key,$this->data_buffer[$key])
                   == UQL_RULE_NOT_MATCHED)
-                return UQL_RULE_FAIL;
+               {
+                  $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+                  return UQL_RULE_FAIL;
+               }
              }
 
            $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
@@ -746,7 +750,7 @@ class underQL
         if(!isset($this->rules_objects_list[$this->table_name]))
          return true;
 
-        //current table rules object
+        //current table's rules object
         $l_target = $this->rules_objects_list[$this->table_name];
 
         return ($l_target->rules_error_flag == false);
@@ -763,6 +767,7 @@ class underQL
 
         //current table rules object
         $l_target = $this->rules_objects_list[$this->table_name];
+
         if($l_target->rules_error_flag)
          return $l_target->rules_error_message;
 
@@ -777,6 +782,8 @@ class underQL
       {
           if(!($rule_object instanceof UQLRule))
            return false;
+
+          $rule_object->rules_error_flag = false;
 
           $this->rules_objects_list[$rule_object->getTableName()] = $rule_object;
           return true;
@@ -819,6 +826,7 @@ class underQL
             $data_buffer_length = @ count( $this->data_buffer );
             if ( $data_buffer_length == 0 )
                   return false;
+
             $sql = 'INSERT INTO ' . $this->table_name . ' ';
             $sql_columns = '(';
             $sql_values = ' VALUE(';
@@ -852,7 +860,10 @@ class underQL
 
             $l_result = $this->query( $sql_insert_string );
             $this->clearDataBuffer( );
-            return $l_result;
+            if($l_result)
+             return @mysql_insert_id(underQL::$db_handle);
+
+            return false;
       }
 
        /*
@@ -863,10 +874,12 @@ class underQL
             $data_buffer_length = @ count( $this->data_buffer );
             if ( $data_buffer_length == 0 )
                   return false;
+
             $sql = 'UPDATE ' . $this->table_name . ' SET ';
             $sql_clues = '';
             $this->quote( );
             $i = 0;
+
             foreach ( $this->data_buffer as $k => $v )
             {
                   $sql_clues .= ' ' . $k . '=' . $v;
@@ -874,7 +887,9 @@ class underQL
                         $sql_clues .= ',';
                   $i++;
             }
+
             $sql .= $sql_clues;
+
             if ( $where != null )
                   $sql .= ' WHERE ' . $where;
             return $sql;
@@ -900,8 +915,10 @@ class underQL
       private function formatDeleteCommand( $where = null )
       {
             $sql = 'DELETE FROM ' . $this->table_name;
+
             if ( $where != null )
                   $sql .= ' WHERE ' . $where;
+
             return $sql;
       }
 
@@ -920,8 +937,10 @@ class underQL
       private function formatSelectCommand( $cols = '*', $extra = null )
       {
             $sql = 'SELECT ' . $cols . ' FROM ' . $this->table_name;
+
             if ( $extra != null )
                   $sql .= ' ' . $extra;
+
             return $sql;
       }
 
@@ -929,14 +948,13 @@ class underQL
       public function select( $cols = '*', $extra = null )
       {
             $sql_select_string = $this->formatSelectCommand( $cols, $extra );
-            $this->free( );
+
             $l_result = $this->query( $sql_select_string );
+
             $this->clearDataBuffer( );
-            //echo $sql_select_string;
             if ( @ mysql_num_rows( $this->db_query_result ) == 0 )
                   return false;
-            // $this->fetch();
-            // get first record
+
             return $l_result;
       }
 
@@ -950,26 +968,27 @@ class underQL
            {
                $this->db_current_object = @ mysql_fetch_object( $this->db_query_result );
                if(!$this->db_current_object)
-                return null;
+                return false;
 
-               $l_fields_names = $this->table_fields_names[$this->table_name];//[$this->table_name];// $this->getTableFieldsNames();
-               //print_r($l_fields_names);
+               $l_fields_names = $this->table_fields_names[$this->table_name];
+
                if($l_fields_names)
                {
                   foreach ($l_fields_names as $field_index => $field_name)
                  {
-                           // echo $this->db_current_object->$field_name.'<br />';
                     if(@isset($this->db_current_object->$field_name))
                     {
-
-                        $this->db_current_object->$field_name =
-                               $this->applyOutFilter($field_name);
+                       if(@array_key_exists($field_name,$this->out_filters[$this->table_name]))
+                         $this->db_current_object->$field_name = $this->applyOutFilter($field_name);
                     }
                  }
+                 return true;
                }
+               else
+                return true;
            }
            else
-            return null;
+            return false;
 
       }
 
@@ -978,14 +997,16 @@ class underQL
       {
             if ( !$this->db_query_result )
                   return 0;
+
             return @ mysql_num_rows( $this->db_query_result );
       }
 
       /* Get the number of affected rows from the last query */
       public function affected( )
       {
-            if ( ( !underQL::$db_handle ))
+            if ( !underQL::$db_handle )
                   return 0;
+
             return @ mysql_affected_rows( underQL::$db_handle );
       }
 
@@ -1032,28 +1053,24 @@ class underQL
                     else
                       {
                         $_temp = $this->in_filters[$this->table_name][func_get_arg( $i )];
-                       // if(!in_array($filter_name,$_temp))
-                          $_temp[@count($_temp)] = $filter_name;
-
+                        $_temp[@count($_temp)] = $filter_name;
 
                         $this->in_filters[$this->table_name][func_get_arg( $i )] = $_temp;
                       }
                   }
                   return true;
+
               case UQL_FILTER_OUT:
                for ( $i = 2; $i < $l_args_num; $i++ )
                   {
                     if(!isset($this->out_filters[$this->table_name][func_get_arg( $i )]))
                     {
                        $this->out_filters[$this->table_name][func_get_arg( $i )] = array($filter_name);
-                       //print_r($this->out_filters);
                     }
                     else
                       {
                         $_temp = $this->out_filters[$this->table_name][func_get_arg( $i )];
-                        //print_r($_temp);
-                        //if(!in_array($filter_name,$_temp))
-                          $_temp[@count($_temp)] = $filter_name;
+                        $_temp[@count($_temp)] = $filter_name;
 
                         $this->out_filters[$this->table_name][func_get_arg( $i )] = $_temp;
 
@@ -1074,6 +1091,7 @@ class underQL
       {
             global $UNDERQL;
             $checker_callback = $UNDERQL['checker']['prefix'] . $checker;
+
             if ( !function_exists( $checker_callback ))
                   return false;
             return $checker_callback( $this->data_buffer[$value] );
@@ -1088,11 +1106,8 @@ class underQL
             $this->free( );
             $this->db_query_result = @ mysql_query( $query );
             if ( $this->db_query_result )
-            {
-                  /*if ( @ mysql_num_rows( $this->db_query_result ) > 0 )
-                        $this->fetch( ); */
                   return true;
-            }
+
             return false;
       }
 
@@ -1104,9 +1119,7 @@ class underQL
       private function applyOutFilter($key)
       {
           global $UNDERQL;
-                   //
-            $value = null;
-                  //echo $key;
+          $value = null;
 
             if ( isset($this->db_current_object) )
               {
@@ -1124,7 +1137,6 @@ class underQL
                           $filters_list = $this->out_filters[$this->table_name][$key];
                           for($i = 0; $i < $filters_count; $i++)
                           {
-                             // echo $this->db_current_object->$key;
                              $filter_callback = $UNDERQL['filter']['prefix'].$filters_list[$i];
                              $value = $filter_callback($this->db_current_object->$key,UQL_FILTER_OUT);
                           }
@@ -1135,7 +1147,7 @@ class underQL
                     }
               }
 
-            return ((isset($this->db_current_object->$key)) ? $this->db_current_object->$key : $value);
+            return ((isset($this->db_current_object->$key)) ? $this->db_current_object->$key : null);
       }
 
       /*
@@ -1148,7 +1160,6 @@ class underQL
              return $this->db_current_object->$key;
          else
              return null;
-         // return $this->applyOutFilter($key);
       }
 
       /*
@@ -1161,36 +1172,62 @@ class underQL
       public function readFields( )
       {
             global $UNDERQL;
-           /* if ( isset ( $UNDERQL['table'][$this->table_name] ))
-                  return; */
+
             $l_fs = @ mysql_list_fields( $UNDERQL['db']['name'], $this->table_name );
             $l_fq = @ mysql_query( 'SHOW COLUMNS FROM `' . $this->table_name . '`' );
             $l_fc = @ mysql_num_rows( $l_fq );
             @ mysql_free_result( $l_fq );
             $i = 0;
-            if(!isset($this->table_fields_names[$this->table_name]))
-              $this->table_fields_names[$this->table_name] = array( );
 
+            $this->table_fields_names[$this->table_name] = array( );
             $this->string_fields = array( );
+
             while ( $i < $l_fc )
             {
                   $l_f = mysql_fetch_field( $l_fs );
                   if ( $l_f->numeric != 1 )
-                  {
-                        $this->string_fields[@ count( $this->string_fields )] = $l_f->name;
-                  }
+                   $this->string_fields[@ count( $this->string_fields )] = $l_f->name;
+
                    $this->table_fields_names[$this->table_name]
                      [@count($this->table_fields_names[$this->table_name])]  = $l_f->name;
                   $i++;
             }
-            //print_r($this->table_fields_names);
       }
 
+
+      public function getByID($ival,$fname = 'id')
+      {
+        $this->select('*','WHERE '.$fname.' = '.$ival);
+        if($this->count() == 0)
+         return null;
+
+        $this->fetch();
+        return $this->db_current_object;
+      }
+
+      public function getBy($fname,$ival)
+      {
+        if(!in_array($fname,$this->table_fields_names[$this->table_name]))
+         return false;
+
+        if(in_array($fname,$this->string_fields))
+         $value = "'".$ival."'";
+        else
+         $value = $ival;
+
+        $this->select('*','WHERE '.$fname.' = '.$value);
+         if($this->count() == 0)
+         return false;
+
+         return true;
+
+      }
       /*
        Free the database results and close the database.
       */
       public function finish( )
       {
+            $this->clearDataBuffer();
             $this->free( );
             if ( underQL::$db_handle )
                   @ mysql_close( underQL::$db_handle );
@@ -1201,6 +1238,7 @@ class underQL
 
 /* underQL instance (object) */
 
-$_ = new underQL( );
-$underQL = &$_;
+   $_ = new underQL( );
+   $underQL = &$_;
+
 ?>
