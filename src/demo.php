@@ -15,6 +15,13 @@
 
 require_once('multi/underQL.php');
 
+$tasks = new underQL('tasks');
+
+$tasks->getBy('status','not_achieved');
+
+while($tasks->fetch())
+  echo $tasks->text.'<br />';
+
 
 ?>
 
