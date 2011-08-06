@@ -20,7 +20,7 @@ require_once('uti.php');
 require_once('rule.php');
 require_once('filter.php');
 require_once('checker.php');
-
+require_once('plugin.php');
 
 define ('UQL_RULE_MATCHED',0xE1);
 define ('UQL_RULE_NOT_MATCHED',0xE2);
@@ -165,7 +165,7 @@ class underQL
       // fields names for the current table.
       private $table_fields_names;
      // table name that is accepting all instructions from the object
-     private $table_name;
+      private $table_name;
 
 
       // DB connectivity
@@ -283,6 +283,22 @@ class underQL
             }
             @ mysql_free_result( $l_result );
             $this->error( $tname . ' dose not exist' );
+      }
+
+      /*
+        Get current table name
+      */
+      public function getTableName()
+      {
+        return $this->table_name;
+      }
+
+       /*
+        Get current table's fields names
+      */
+      public function getFieldsList()
+      {
+        return $this->table_fields_names;
       }
 
       /*
@@ -850,6 +866,18 @@ class underQL
             }
       }
 
+      public function __call($func,$args)
+      {
+         global $UNDERQL;
+
+         $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
+
+         if(function_exists($plugin_callback))
+          return $plugin_callback($this,$args);
+
+         return UQL_PLUGIN_RETURN;
+
+      }
 
       public function getByID($ival,$fname = 'id')
       {

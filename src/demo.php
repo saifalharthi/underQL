@@ -13,10 +13,11 @@
 
 <?php
 
+
+
 require_once('multi/underQL.php');
-
 $tasks = new underQL('tasks');
-
+echo $tasks->toXML();
 $tasks->getBy('status','not_achieved');
 
 while($tasks->fetch())

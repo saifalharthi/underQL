@@ -47,5 +47,9 @@ define ('UQL_FILTER_IN',0xAB);
 define ('UQL_FILTER_OUT',0xAC);
 
 
+$UNDERQL['plugin']['api_prefix'] = 'uql_plugin_';
+
+define ('UQL_PLUGIN_RETURN',null);
+
 
 ?>
