@@ -164,6 +164,8 @@ class underQL
       private $string_fields;
       // fields names for the current table.
       private $table_fields_names;
+      // this is the array that is used to store fields names for the current query.
+      private $fields_of_current_query;
      // table name that is accepting all instructions from the object
       private $table_name;
 
@@ -212,6 +214,7 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
+            $this->fields_of_current_query = array ( );
             $this->rules_objects_list = array();
             $this->in_filters = array();
             $this->out_filters = array();
@@ -301,6 +304,13 @@ class underQL
         return $this->table_fields_names;
       }
 
+      /*
+       Get current query fields names as array.
+      */
+      public function getCurrentQueryFields()
+      {
+        return $this->fields_of_current_query;
+      }
       /*
        It will used when you call underQL object($_) as a function to execute a select query
        $tname : current table.
@@ -777,8 +787,18 @@ class underQL
       {
             $this->free( );
             $this->db_query_result = @ mysql_query( $query );
+            $this->fields_of_current_query = array();
             if ( $this->db_query_result )
-                  return true;
+                {
+                    $l_fnum = @mysql_num_fields($this->db_query_result);
+                    if($l_fnum > 0)
+                    {
+                      for($i = 0; $i < $l_fnum; $i++)
+                       $this->fields_of_current_query[] = mysql_field_name($this->db_query_result,$i);
+                      //var_dump($this->fields_of_current_query);
+                    }
+                    return true;
+                }
 
             return false;
       }
@@ -866,6 +886,12 @@ class underQL
             }
       }
 
+      /*
+        Used to apply plugin.
+        $func : plugin name.
+        $args : plubin arguments.
+      */
+
       public function __call($func,$args)
       {
          global $UNDERQL;
@@ -879,6 +905,12 @@ class underQL
 
       }
 
+      /*
+        Get one record based-on its ID.
+        $ival : id value.
+        $fname: field name.Default value is [id] because it is most common.
+      */
+
       public function getByID($ival,$fname = 'id')
       {
         $this->select('*','WHERE '.$fname.' = '.$ival);
@@ -889,6 +921,11 @@ class underQL
         return $this->db_current_object;
       }
 
+      /*
+        Get records based-on its ($fname) field value($ival).
+        $fname: field name.
+        $ival : id value.
+      */
       public function getBy($fname,$ival)
       {
         if(!in_array($fname,$this->table_fields_names[$this->table_name]))

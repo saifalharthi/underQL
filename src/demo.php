@@ -15,14 +15,17 @@
 
 
 
-require_once('multi/underQL.php');
+require_once('single/underQL.php');
+
 $tasks = new underQL('tasks');
-echo $tasks->toXML();
-$tasks->getBy('status','not_achieved');
 
-while($tasks->fetch())
-  echo $tasks->text.'<br />';
-
+$xml = $tasks->toXML('MAX(id)');
+if(is_string($xml))
+ {
+   $fd = fopen('to.xml','w');
+   fwrite($fd,$xml);
+   fclose($fd);
+ }
 
 ?>
 

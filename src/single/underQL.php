@@ -59,6 +59,11 @@ define ('UQL_FILTER_OUT',0xAC);
 
 
 
+$UNDERQL['plugin']['api_prefix'] = 'uql_plugin_';
+
+define ('UQL_PLUGIN_RETURN',null);
+
+
 $UNDERQL['rule']['uql_fail_messages'] = array(
 
     'length'   => 'Length of %s was exceeded the maximum length (%d)',
@@ -366,13 +371,54 @@ function uql_checker_set($value)
    return (isset($value));
 }
 
+
+function uql_plugin_toXML($that,$args)
+{
+  $arg_num = @count($args);
+  switch($arg_num)
+  {
+    case 0:
+     $that->select(); break;
+    case 1:
+     $that->select($args[0]); break;
+    case 2:
+     $that->select($args[0],$args[1]); break;
+    default :
+     return UQL_PLUGIN_RETURN;
+  }
+
+  if($that->count() == 0)
+   return UQL_PLUGIN_RETURN;
+
+  $tname = $that->getTableName();
+  $xml  = '<?xml version = "1.0" encoding ="UTF-8" ?>'."\n";
+  $xml .= '<'.$tname.'>'."\n";
+  $fields = $that->getFieldsList();
+  $fields = $that->getCurrentQueryFields();
+  $fields_count = @count($fields);
+
+  while($that->fetch())
+  {
+   $xml .= '<record>'."\n";
+   for($i = 0; $i < $fields_count; $i++ )
+   {
+      if($that->$fields[$i] != null)
+            $xml .= '<'.$fields[$i].'>'.$that->$fields[$i].'</'.$fields[$i].'>'."\n";
+   }
+   $xml .= '</record>'."\n";
+  }
+
+  $xml .= '</'.$tname.'>'."\n";
+  $that->free();
+  return $xml;
+}
+
 define ('UQL_RULE_MATCHED',0xE1);
 define ('UQL_RULE_NOT_MATCHED',0xE2);
 define ('UQL_RULE_NOP',0xE3);
 /*This is returned if all rules applied with no problems*/
 define ('UQL_RULE_OK',0xE4);
 define ('UQL_RULE_FAIL',0xE5); // when rule fail of all rules
-
 
 
 class UQLRule
@@ -508,8 +554,10 @@ class underQL
       private $string_fields;
       // fields names for the current table.
       private $table_fields_names;
+      // this is the array that is used to store fields names for the current query.
+      private $fields_of_current_query;
      // table name that is accepting all instructions from the object
-     private $table_name;
+      private $table_name;
 
 
       // DB connectivity
@@ -556,6 +604,7 @@ class underQL
             $this->db_current_object = null;
             $this->db_query_result = false;
             $this->table_fields_names = array( );
+            $this->fields_of_current_query = array ( );
             $this->rules_objects_list = array();
             $this->in_filters = array();
             $this->out_filters = array();
@@ -629,6 +678,29 @@ class underQL
             $this->error( $tname . ' dose not exist' );
       }
 
+      /*
+        Get current table name
+      */
+      public function getTableName()
+      {
+        return $this->table_name;
+      }
+
+       /*
+        Get current table's fields names
+      */
+      public function getFieldsList()
+      {
+        return $this->table_fields_names;
+      }
+
+      /*
+       Get current query fields names as array.
+      */
+      public function getCurrentQueryFields()
+      {
+        return $this->fields_of_current_query;
+      }
       /*
        It will used when you call underQL object($_) as a function to execute a select query
        $tname : current table.
@@ -1105,8 +1177,18 @@ class underQL
       {
             $this->free( );
             $this->db_query_result = @ mysql_query( $query );
+            $this->fields_of_current_query = array();
             if ( $this->db_query_result )
-                  return true;
+                {
+                    $l_fnum = @mysql_num_fields($this->db_query_result);
+                    if($l_fnum > 0)
+                    {
+                      for($i = 0; $i < $l_fnum; $i++)
+                       $this->fields_of_current_query[] = mysql_field_name($this->db_query_result,$i);
+                      //var_dump($this->fields_of_current_query);
+                    }
+                    return true;
+                }
 
             return false;
       }
@@ -1194,6 +1276,30 @@ class underQL
             }
       }
 
+      /*
+        Used to apply plugin.
+        $func : plugin name.
+        $args : plubin arguments.
+      */
+
+      public function __call($func,$args)
+      {
+         global $UNDERQL;
+
+         $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
+
+         if(function_exists($plugin_callback))
+          return $plugin_callback($this,$args);
+
+         return UQL_PLUGIN_RETURN;
+
+      }
+
+      /*
+        Get one record based-on its ID.
+        $ival : id value.
+        $fname: field name.Default value is [id] because it is most common.
+      */
 
       public function getByID($ival,$fname = 'id')
       {
@@ -1205,6 +1311,11 @@ class underQL
         return $this->db_current_object;
       }
 
+      /*
+        Get records based-on its ($fname) field value($ival).
+        $fname: field name.
+        $ival : id value.
+      */
       public function getBy($fname,$ival)
       {
         if(!in_array($fname,$this->table_fields_names[$this->table_name]))
@@ -1240,5 +1351,4 @@ class underQL
 
    $_ = new underQL( );
    $underQL = &$_;
-
 ?>
