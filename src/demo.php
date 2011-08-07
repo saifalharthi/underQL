@@ -15,17 +15,12 @@
 
 
 
-require_once('single/underQL.php');
+require_once('multi/underQL.php');
 
 $tasks = new underQL('tasks');
-
-$xml = $tasks->toXML('MAX(id)');
-if(is_string($xml))
- {
-   $fd = fopen('to.xml','w');
-   fwrite($fd,$xml);
-   fclose($fd);
- }
+//echo $tasks->toXML();
+//echo '<br />';
+echo $tasks->toJSON('id,text');
 
 ?>
 
