@@ -43,7 +43,6 @@ function uql_plugin_toXML($that,$args)
 
 function uql_plugin_toJSON($that,$args)
 {
- //{"tasks":[{},{},{}]}
   $arg_num = @count($args);
   switch($arg_num)
   {
@@ -92,4 +91,6 @@ function uql_plugin_toJSON($that,$args)
   $that->free();
   return $json;
 }
+
+
 ?>

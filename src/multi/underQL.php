@@ -886,6 +886,12 @@ class underQL
             }
       }
 
+      public function isPluginExist($plugin)
+      {
+        global $UNDERQL;
+        return function_exists($UNDERQL['plugin']['api_prefix'].$plugin);
+      }
+
       /*
         Used to apply plugin.
         $func : plugin name.
@@ -896,10 +902,11 @@ class underQL
       {
          global $UNDERQL;
 
-         $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
-
-         if(function_exists($plugin_callback))
-          return $plugin_callback($this,$args);
+         if($this->isPluginExist($func))
+          {
+             $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
+             return $plugin_callback($this,$args);
+          }
 
          return UQL_PLUGIN_RETURN;
 

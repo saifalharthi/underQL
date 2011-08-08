@@ -11,16 +11,13 @@
 
 <body>
 
+<p>$task->name</p>
+
 <?php
 
-
-
 require_once('multi/underQL.php');
-
-$tasks = new underQL('tasks');
-//echo $tasks->toXML();
-//echo '<br />';
-echo $tasks->toJSON('id,text');
+$athdak = new underQL('athdak_tasks');
+$row = $athdak->getBy();
 
 ?>
 
