@@ -19,7 +19,7 @@
 $UNDERQL['db']['host'] = 'localhost';
 
 /* database name */
-$UNDERQL['db']['name'] = 'tasky';
+$UNDERQL['db']['name'] = 'athdak_db';
 
 /* database user name */
 $UNDERQL['db']['user'] = 'root';

@@ -94,10 +94,10 @@ class UQLTemplateSegment
   }
 }
 
-define('UQL_TEMPLATE_PARSER_FILE',100);
-define('UQL_TEMPLATE_PARSER_STRING',200);
+define('UQL_TEMPLATE_FROM_FILE',100);
+define('UQL_TEMPLATE_FROM_STRING',200);
 
-class UQLTemplateSegmentParser{
+class UQLTemplateParser{
 
  private $segment_rule_expression;
  private $segments;
@@ -107,25 +107,38 @@ class UQLTemplateSegmentParser{
  private $parsing_matches;
  private $parsing_matches_count;
 
- public function __construct($value,$type = UQL_TEMPLATE_PARSER_FILE)
+ public function __construct($value,$type = UQL_TEMPLATE_FROM_FILE)
  {
-   if($type == UQL_TEMPLATE_PARSER_FILE)
+   $this->setTemplate($value,$type);
+   $this->segment_rule_expression = '/<usegment[\s]+name[\s]*=[\s]*"(.+)"[\s]*>[\s]*(.*)[\s]*<\/usegment>/imsUx';
+ }
+
+ public function resetParser()
+ {
+   $this->template = null;
+   $this->template_path = null;
+   $this->segments = array();
+   $this->parsing_matches = array();
+   $this->parsing_matches_count = 0;
+   $this->template_source = null;
+ }
+
+
+ public function setTemplate($value, $type = UQL_TEMPLATE_FROM_FILE)
+ {
+    $this->resetParser();
+
+   if($type == UQL_TEMPLATE_FROM_FILE)
    {
-      $this->template = file_get_conents($path);
-      $this->template_path = $path;
+      $this->template = implode("\n",file($value));
+      $this->template_path = $value;
    }
    else
     {
       $this->template = $value;
       $this->template_path = null;
     }
-
-   $this->segments = array();
-   $this->template_source = $type;
-   $this->segment_rule_expression = '/<usegment[\s]+name[\s]*=[\s]*"(.+)"[\s]*>[\s]*(.*)[\s]*<[\s]*\/[\s]*usegment[\s]*>/i';//'<[\s]+usegment[\s]+=[\s]+"(.+)"[\s]+>(.+)<[\s]+/usegment[\s]+>';
-   $this->parsing_matches = array();
-   $this->parsing_matches_count = 0;
-
+    $this->template_source = $type;
  }
 
  public function parseTemplate()
@@ -141,18 +154,18 @@ class UQLTemplateSegmentParser{
                                        );
    if(!$this->parsing_matches_count)
     return false;
-   // echo $this->parsing_matches_count;
+
    for($i = 0; $i < $this->parsing_matches_count; $i++)
    {
       $_segment = new UQLTemplateSegment($this->parsing_matches[1][$i]);
       $_segment->setSegmentContent($this->parsing_matches[2][$i]);
-      $this->segments[] = $_segment;
+      $this->segments[$this->parsing_matches[1][$i]] = $_segment;
    }
     return true;
    }
  }
 
- public function isSegmentFound()
+ public function isThereAnySegment()
  {
    return $this->parsing_matches_count;
  }
@@ -164,42 +177,73 @@ class UQLTemplateSegmentParser{
 
 }
 
-$content =<<<CON
-<usegment name = "RapidPHP">
- <h2>\$title</h2><code>\$text</code>
-</usegment>
-
-<usegment name ="Zend">www.zend.com</usegment>  <br />
-It is very nice template engine that you can attach it with underQL
-<usegment name ="underQL">
- under<sup>QL</sup>
-</usegment>
-CON;
-
-/*$segment = new UQLTemplateSegment('Gamba');
-$segment->setSegmentContent($content);
-$segment->title = 'Welcome to UQLTemplateSegment !';
-$segment->text  = 'It is very nice template engine that you can attach it with underQL';
-
-echo $segment->executeSegment();
-
-*/
-
-$parser = new UQLTemplateSegmentParser($content,UQL_TEMPLATE_PARSER_STRING);
-$parser->parseTemplate();
-$segs = $parser->getSegments();
-$seg = $segs[0];
-//echo $seg->getSegmentName();
-$seg->title = 'Welcome to UQLTemplateParser';
-$seg->text  = 'This is our parser by help of our Loard..!';
-//echo $seg->executeSegment();
-
-echo '<pre>';
-var_dump($segs);
-echo '</pre>';
+class underTemplate
+{
+  private $parser;
 
 
+  public function __construct($value,$type = UQL_TEMPLATE_FROM_FILE)
+  {
+     $this->parser = new UQLTemplateParser($value,$type);
+     $this->parser->parseTemplate();
+  }
+
+  public function isThereAnySegment()
+  {
+    return $this->parser->isThereAnySegment();
+  }
+
+  public function findSegment($name)
+  {
+    if($this->parser->isThereAnySegment())
+     {
+       $segments = $this->parser->getSegments();
+       if(isset($segments[$name]))
+        return $segments[$name];
+     }
+     return null;
+  }
+
+  public function getSegments()
+  {
+    return $this->parser->getSegments();
+  }
+
+  public function setTemplate($value,$type = UQL_TEMPLATE_FROM_FILE)
+  {
+    $this->parser->setTemplate($value,$type);
+  }
+
+  public function __destruct()
+  {
+    $this->parser->resetParser();
+  }
+}
+
+ require_once('../multi/underQL.php');
+ $athdak = new underQL('athdak_tasks');
+ $athdak->select();
+
+$template = new underTemplate('uql_template_demo.html');
+
+if($template->isThereAnySegment())
+{
+ $header = $template->findSegment('header');
+ $header->title = 'underQL & underTemplate';
+ echo $header->executeSegment();
 
 
+
+ $loop = $template->findSegment('tasks');
+ while($athdak->fetch())
+ {
+   $loop->id = $athdak->id;
+   $loop->task = $athdak->task;
+   echo $loop->executeSegment();
+ }
+
+ $footer = $template->findSegment('footer');
+ echo $footer->executeSegment();
+}
 
 ?>
