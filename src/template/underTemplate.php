@@ -1,7 +1,6 @@
 <?php
 
 define ('UQL_TEMPLATE_DIR','/');
-define ('UQL_TEMPLATE_VAR','%');
 
 class UQLTemplateSegment
 {
