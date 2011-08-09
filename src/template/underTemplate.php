@@ -1,6 +1,6 @@
 <?php
 
-define ('UQL_TEMPLATE_DIR','/');
+define ('UQL_TEMPLATE_DIR','./');
 
 class UQLTemplateSegment
 {
@@ -91,6 +91,11 @@ class UQLTemplateSegment
 
     return $this->execute_buffer;
   }
+
+  public function output()
+  {
+    echo $this->executeSegment();
+  }
 }
 
 define('UQL_TEMPLATE_FROM_FILE',100);
@@ -129,7 +134,7 @@ class UQLTemplateParser{
 
    if($type == UQL_TEMPLATE_FROM_FILE)
    {
-      $this->template = implode("\n",file($value));
+      $this->template = implode("\n",file(UQL_TEMPLATE_DIR.$value));
       $this->template_path = $value;
    }
    else
@@ -213,36 +218,67 @@ class underTemplate
     $this->parser->setTemplate($value,$type);
   }
 
+  public function includePureTemplate($path,$var_name = null)
+  {
+    return @file_get_contents($path);
+  }
+
+  public function __call($func,$args)
+  {
+     $segment = $this->findSegment($func);
+     if(!($segment instanceof UQLTemplateSegment))
+      return null;
+
+     return $segment;
+  }
+
+  public function fromUnderQL($underQL,$segment_name)
+  {
+    if(($underQL instanceof underQL))
+    {
+        $segment = $this->findSegment($segment_name);
+        $result = '';
+        while($underQL->fetch())
+        {
+           $fields = $underQL->getCurrentQueryFields();
+           $fcount = @count($fields);
+           if($fcount == 0)
+            return '';
+
+           for($i = 0; $i <$fcount; $i++)
+              $segment->$fields[$i] = $underQL->$fields[$i];
+
+           $result .= $segment->executeSegment();
+        }
+        return $result;
+    }
+    return '';
+  }
+
   public function __destruct()
   {
     $this->parser->resetParser();
   }
 }
 
- require_once('../multi/underQL.php');
- $athdak = new underQL('athdak_tasks');
- $athdak->select();
+include('../multi/underQL.php');
 
 $template = new underTemplate('uql_template_demo.html');
+$tasks = new underQL('athdak_tasks');
+$tasks->select('*','WHERE id = 2');
 
-if($template->isThereAnySegment())
-{
- $header = $template->findSegment('header');
- $header->title = 'underQL & underTemplate';
- echo $header->executeSegment();
+$header = $template->header();
+$footer = $template->footer();
+
+$header->title = 'Welcome';
+
+$result = $template->fromUnderQL($tasks,'task');
+
+$header->output();
+echo $result;
+$footer->output();
 
 
 
- $loop = $template->findSegment('tasks');
- while($athdak->fetch())
- {
-   $loop->id = $athdak->id;
-   $loop->task = $athdak->task;
-   echo $loop->executeSegment();
- }
-
- $footer = $template->findSegment('footer');
- echo $footer->executeSegment();
-}
 
 ?>

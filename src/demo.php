@@ -16,8 +16,8 @@
 <?php
 
 require_once('multi/underQL.php');
-$athdak = new underQL('athdak_tasks');
-$row = $athdak->getBy();
+$a = new underQL('athdak_tasks');
+echo $a->toJSON();
 
 ?>
 
