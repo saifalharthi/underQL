@@ -861,7 +861,7 @@ class underQL
         the non-numerical fields becuase we need this array to help us when we calling
         the quote method to add a single quotes.
       */
-      public function readFields( )
+      private function readFields( )
       {
             global $UNDERQL;
 
@@ -951,6 +951,12 @@ class underQL
 
       }
 
+      /*
+       To insert or update data that are comming from array.
+       $op : if 'i' then, insert, otherwise, update.
+       $value : array of values.
+       $extra : used with update if you would like to put a condition.
+      */
       private function opFromArray($op,$values,$extra = null)
       {
 
@@ -965,8 +971,6 @@ class underQL
          {
            if(in_array($key,$this->table_fields_names[$this->getTableName()]))
              $this->$key = $val;
-
-             echo $key.'<br />';
          }
 
          if(@count($this->data_buffer) == 0)
@@ -980,11 +984,20 @@ class underQL
             return $this->update($extra);
       }
 
+       /*
+       To insert data that are comming from array.
+       $value : array of values.
+      */
        public function insertFromArray($values)
        {
          return $this->opFromArray('i',$values);
        }
 
+       /*
+       To update data that are comming from array.
+       $value : array of values.
+       $extra : used with update if you would like to put a condition.
+      */
        public function updateFromArray($values,$extra = null)
        {
          return $this->opFromArray('u',$values,$extra);

@@ -470,7 +470,6 @@ define ('UQL_RULE_NOP',0xE3);
 define ('UQL_RULE_OK',0xE4);
 define ('UQL_RULE_FAIL',0xE5); // when rule fail of all rules
 
-
 class UQLRule
 {
       private $table_name;
@@ -1301,7 +1300,7 @@ class underQL
         the non-numerical fields becuase we need this array to help us when we calling
         the quote method to add a single quotes.
       */
-      public function readFields( )
+      private function readFields( )
       {
             global $UNDERQL;
 
@@ -1326,6 +1325,12 @@ class underQL
             }
       }
 
+      public function isPluginExist($plugin)
+      {
+        global $UNDERQL;
+        return function_exists($UNDERQL['plugin']['api_prefix'].$plugin);
+      }
+
       /*
         Used to apply plugin.
         $func : plugin name.
@@ -1336,10 +1341,11 @@ class underQL
       {
          global $UNDERQL;
 
-         $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
-
-         if(function_exists($plugin_callback))
-          return $plugin_callback($this,$args);
+         if($this->isPluginExist($func))
+          {
+             $plugin_callback = $UNDERQL['plugin']['api_prefix'].$func;
+             return $plugin_callback($this,$args);
+          }
 
          return UQL_PLUGIN_RETURN;
 
@@ -1383,6 +1389,43 @@ class underQL
          return true;
 
       }
+
+      private function opFromArray($op,$values,$extra = null)
+      {
+
+        if(!is_array($values))
+         return false;
+
+        $val_counts = @count($values);
+        if($val_counts == 0)
+         return false;
+        // var_dump($this->table_fields_names);
+         foreach($values as $key => $val)
+         {
+           if(in_array($key,$this->table_fields_names[$this->getTableName()]))
+             $this->$key = $val;
+         }
+
+         if(@count($this->data_buffer) == 0)
+          return false;
+
+         if(!$this->isRulesPassed())
+          return $this->getRuleError();
+         if(strcmp(strtolower($op),'i') == 0)
+            return $this->insert();
+         else
+            return $this->update($extra);
+      }
+
+       public function insertFromArray($values)
+       {
+         return $this->opFromArray('i',$values);
+       }
+
+       public function updateFromArray($values,$extra = null)
+       {
+         return $this->opFromArray('u',$values,$extra);
+       }
       /*
        Free the database results and close the database.
       */
@@ -1401,4 +1444,5 @@ class underQL
 
    $_ = new underQL( );
    $underQL = &$_;
+
 ?>
