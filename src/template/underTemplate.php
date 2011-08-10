@@ -1,5 +1,16 @@
 <?php
 
+/************************************************************/
+/*                       underTemplate                      */
+/************************************************************/
+/*                   Abdullah E. Almehmadi                  */
+/*                 <cs.abdullah@hotmail.com>                */
+/*              MPL(Mozilla Public License 1.1)             */
+/*        domain registered 6:32 am <www.underql.com>       */
+/*                       1.0.0.Beta                         */
+/************************************************************/
+
+
 /* Template files directory path */
 define ('UQL_TEMPLATE_DIR','./');
 /*
@@ -191,7 +202,7 @@ class UQLTemplateParser{
  /*
   Reset parser internal values
  */
- private function resetParser()
+ public function resetParser()
  {
    $this->template = null;
    $this->template_path = null;
@@ -394,6 +405,6 @@ class underTemplate
   }
 }
 
-
+var_dump(new underTemplate('jabli.html'));
 
 ?>
