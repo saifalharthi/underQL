@@ -6,45 +6,33 @@
 <meta content="ar-sa" http-equiv="Content-Language" />
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <title>$title</title>
-<style type="text/css">
-.table {
-	padding: 4px;
-	margin: 4px;
-	background-color: #E9E9E9;
-	border-radius: 10px;
-	border: 1px solid #CCCCCC;
 
-}
-.auto-style1 {
-	text-align: center;
-}
-.auto-style2 {
-	text-align: right;
-	color: #000000;
-}
-</style>
 </head>
 
 <body>
 
-<table  class="table" align="center" dir="rtl" style="width: 70%">
+
+<div align = "right">
+
+<form action = "binmosa.php" method = "post">
+<input type = "text" name = "task" />
+<input type = "submit" value = "save task" />
+</form>
+
 
 </usegment>
 
 <usegment name = "task">
-	<tr bgcolor = "#ECCECE">
-		<td class="auto-style2"><strong>$id</strong></td>
-		<td class="auto-style2"><strong>$task</strong></td>
-	</tr>
-	<tr>
+ <form action = "binmosa.php?u=$id" method = "post">
+<input size = "100" type = "text" name = "task" value ="$task" />
+<input type = "submit" value = "modify $id" />
+</form> <a href ="binmosa.php?id=$id">X</a>
 </usegment>
 
 <usegment name ="footer">
-		<td style="height: 32px"></td>
-		<td style="height: 32px"></td>
-	</tr>
-</table>
 
+
+</div>
 </body>
 
 </html>

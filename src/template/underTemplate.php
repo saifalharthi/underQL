@@ -261,24 +261,6 @@ class underTemplate
   }
 }
 
-include('../multi/underQL.php');
-
-$template = new underTemplate('uql_template_demo.html');
-$tasks = new underQL('athdak_tasks');
-$tasks->select('*','WHERE id = 2');
-
-$header = $template->header();
-$footer = $template->footer();
-
-$header->title = 'Welcome';
-
-$result = $template->fromUnderQL($tasks,'task');
-
-$header->output();
-echo $result;
-$footer->output();
-
-
 
 
 ?>

@@ -950,6 +950,45 @@ class underQL
          return true;
 
       }
+
+      private function opFromArray($op,$values,$extra = null)
+      {
+
+        if(!is_array($values))
+         return false;
+
+        $val_counts = @count($values);
+        if($val_counts == 0)
+         return false;
+        // var_dump($this->table_fields_names);
+         foreach($values as $key => $val)
+         {
+           if(in_array($key,$this->table_fields_names[$this->getTableName()]))
+             $this->$key = $val;
+
+             echo $key.'<br />';
+         }
+
+         if(@count($this->data_buffer) == 0)
+          return false;
+
+         if(!$this->isRulesPassed())
+          return $this->getRuleError();
+         if(strcmp(strtolower($op),'i') == 0)
+            return $this->insert();
+         else
+            return $this->update($extra);
+      }
+
+       public function insertFromArray($values)
+       {
+         return $this->opFromArray('i',$values);
+       }
+
+       public function updateFromArray($values,$extra = null)
+       {
+         return $this->opFromArray('u',$values,$extra);
+       }
       /*
        Free the database results and close the database.
       */
@@ -968,4 +1007,5 @@ class underQL
 
    $_ = new underQL( );
    $underQL = &$_;
+
 ?>
