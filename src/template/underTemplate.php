@@ -405,6 +405,4 @@ class underTemplate
   }
 }
 
-var_dump(new underTemplate('jabli.html'));
-
 ?>
