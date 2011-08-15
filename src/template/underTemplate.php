@@ -130,7 +130,7 @@ class UQLTemplateSegment
    Apply replacment for all variables within the segment with their values.
    However, the original value will stll unchanged.
   */
-  public function executeSegment()
+  public function execute()
   {
     $vars_count = @count($this->segment_vars);
     if($vars_count == 0)
@@ -157,9 +157,12 @@ class UQLTemplateSegment
   /*
     Print out the result of executed segment.
   */
-  public function output()
+  public function output($ret = false)
   {
-    echo $this->executeSegment();
+    if($ret)
+     return $this->execute();
+
+    echo $this->execute();
   }
 }
 
@@ -389,7 +392,7 @@ class underTemplate
            for($i = 0; $i <$fcount; $i++)
               $segment->$fields[$i] = $underQL->$fields[$i];
 
-           $result .= $segment->executeSegment();
+           $result .= $segment->execute();
         }
         return $result;
     }
