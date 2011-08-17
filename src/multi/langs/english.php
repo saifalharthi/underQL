@@ -9,7 +9,8 @@ $UNDERQL['rule']['uql_fail_messages'] = array(
     'between'  => 'The value of %s was out of range',
     'hex'      => 'The value of %s must be a Hexdecimal characters [0-9] or [A-F]',
     'alpha'    => 'The value of %s must be alphabet',
-    'alphanum' => 'The value of %s must be mixed of alphabet and numbers'
+    'alphanum' => 'The value of %s must be mixed of alphabet and numbers',
+    'email'    => 'The value of %s was not a valid email syntax'
 
 );
 

@@ -8,7 +8,7 @@
 $UNDERQL['db']['host'] = 'localhost';
 
 /* database name */
-$UNDERQL['db']['name'] = 'athdak_db';
+$UNDERQL['db']['name'] = 'adeeb_db';
 
 /* database user name */
 $UNDERQL['db']['user'] = 'root';
@@ -37,7 +37,7 @@ $UNDERQL['warning']['prefix'] = 'UnderQL Warning : ';
 
 $UNDERQL['rule']['uql_prefix'] = 'uql_rule_';
 
-$UNDERQL['lang']['module'] = 'english';
+$UNDERQL['lang']['module'] = 'arabic';
 
 
 

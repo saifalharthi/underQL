@@ -90,9 +90,12 @@ class UQLRule
        $name : field name.
        $value : alias name.
       */
-      public function addAlias( $name, $value )
+      public function addAlias( $name, $value ,$utf8 = true,$charset = 'windows-1256')
       {
-            $this->aliases[$name] = $value;
+            if($utf8)
+              $this->aliases[$name] = @iconv($charset, 'UTF-8', $value);
+            else
+              $this->aliases[$name] = $value;
       }
 
       /*
@@ -411,10 +414,14 @@ class underQL
                if(!isset($this->data_buffer[$key]))
                 continue;
 
+               //Apply filter first
+               $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+
+               // Check rule second
                if($l_target_rule->applyRule($rule_name,$key,$this->data_buffer[$key])
                   == UQL_RULE_NOT_MATCHED)
                {
-                  $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
+                 // $this->data_buffer[$key] = $this->applyInFilter($key,$this->data_buffer[$key]);
                   return UQL_RULE_FAIL;
                }
              }
@@ -959,14 +966,13 @@ class underQL
       */
       private function opFromArray($op,$values,$extra = null)
       {
-
         if(!is_array($values))
          return false;
 
         $val_counts = @count($values);
         if($val_counts == 0)
          return false;
-        // var_dump($this->table_fields_names);
+
          foreach($values as $key => $val)
          {
            if(in_array($key,$this->table_fields_names[$this->getTableName()]))
@@ -978,6 +984,7 @@ class underQL
 
          if(!$this->isRulesPassed())
           return $this->getRuleError();
+
          if(strcmp(strtolower($op),'i') == 0)
             return $this->insert();
          else

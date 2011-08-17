@@ -176,4 +176,19 @@ function uql_rule_alphanum($rules,$name,$value,$alias = null)
 
 }
 
+function uql_rule_email($rules,$name,$value,$alias = null)
+{
+    $rule_result = uql_uti_rule_init($rules,'email',$name,$alias);
+     if(!$rule_result)
+       return UQL_RULE_NOP;
+
+    list($rule_value,$caption) = $rule_result;
+
+    if(!filter_var($value,FILTER_VALIDATE_EMAIL))
+       return uql_uti_rule_get_error_message('email',$caption);
+    else
+       return UQL_RULE_MATCHED;
+}
+
+
 ?>

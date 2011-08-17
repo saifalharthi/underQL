@@ -1444,5 +1444,8 @@ class underQL
 
    $_ = new underQL( );
    $underQL = &$_;
+   echo '<pre>';
+   var_dump($underQL);
+   echo '</pre>';
 
 ?>
