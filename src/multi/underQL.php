@@ -915,7 +915,8 @@ class underQL
              return $plugin_callback($this,$args);
           }
 
-         return UQL_PLUGIN_RETURN;
+         $this->error('Call to undefined method/plugin :'.$func);
+         //return UQL_PLUGIN_RETURN;
 
       }
 
