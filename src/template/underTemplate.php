@@ -138,17 +138,15 @@ class UQLTemplateSegment
 
     if(empty($this->segment_content))
      return '';
-
-
-
+                                      // email emailval
     $this->execute_buffer = null;
     foreach($this->segment_vars as $key => $val)
     {
-      $var_name = '$'.$key;
+      $var_name = '\$'.$key;
       if($this->execute_buffer == null)
-       $this->execute_buffer = str_replace($var_name,$val,$this->segment_content);
+       $this->execute_buffer = preg_replace('/('.$var_name.')\b/',$val,$this->segment_content);
       else
-       $this->execute_buffer = str_replace($var_name,$val,$this->execute_buffer);
+       $this->execute_buffer = preg_replace('/('.$var_name.')\b/',$val,$this->execute_buffer);
     }
 
     return $this->execute_buffer;
@@ -407,6 +405,5 @@ class underTemplate
     $this->parser->resetParser();
   }
 }
-
-
+ 
 ?>

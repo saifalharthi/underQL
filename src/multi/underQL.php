@@ -1029,4 +1029,9 @@ class underQL
    $_ = new underQL( );
    $underQL = &$_;
 
+   $_('users');
+   while($_->fetch())
+   {
+     echo $_->name.'<br />';
+   }
 ?>
